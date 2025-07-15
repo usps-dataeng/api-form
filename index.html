@@ -875,16 +875,11 @@
 
 			emailBody += `=== DIGITAL SIGNATURE & VERIFICATION ===\n`;
 			emailBody += `Signed by: ${data.digitalSignature || data.requestorName}\n`;
-			emailBody += `Signature Date: ${new Date().toISOString()}\n`;
-			emailBody += `Browser: ${navigator.userAgent}\n`;
-			emailBody += `Timestamp: ${Date.now()}\n`;
-			emailBody += `Form Version: 1.0\n\n`;
+			emailBody += `Signature Date: ${new Date().toISOString()}\n`;						
 
 			emailBody += `=== APPROVAL REQUIRED ===\n`;
 			emailBody += `To approve this request, reply to this email with:\n\n`;
-			emailBody += `DECISION: [APPROVED or REJECTED]\n`;
-			emailBody += `APPROVER SIGNATURE: [Type your full name]\n`;
-			emailBody += `APPROVAL DATE: ${new Date().toLocaleDateString()}\n`;
+			emailBody += `DECISION: [APPROVED or REJECTED]\n`;						
 			emailBody += `COMMENTS: [Optional feedback or rejection reason]\n\n`;
 			
 			emailBody += `--- Please review and approve this request ---`;
