@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Management - Pre-Approval Request Form</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0078d4;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e1e1;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0078d4;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #0078d4;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        .required {
+            color: #d13438;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .radio-group label, .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .radio-group input, .checkbox-group input {
+            width: auto;
+            margin-right: 5px;
+        }
+        .tier-selection-chart {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .tier-chart-header {
+            background: #0078d4;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .tier-chart-row {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        .tier-chart-row:last-child {
+            border-bottom: none;
+        }
+        .tier-chart-cell {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-right: 1px solid #eee;
+        }
+        .tier-chart-cell:last-child {
+            border-right: none;
+        }
+        .tier-chart-row:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .naming-preview {
+            background: #e8f4fd;
+            border: 1px solid #0078d4;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0078d4;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .submit-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e1e1e1;
+        }
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #0078d4;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #106ebe;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: #0078d4;
+            border: 2px solid #0078d4;
+        }
+        .btn-outline:hover {
+            background-color: #0078d4;
+            color: white;
+        }
+        .validation-error {
+            color: #d13438;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .auto-populate {
+            background-color: #f0f8ff;
+            border-color: #0078d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1>API Management Creation Request</h1>
+            <p>Pre-Approval Request Form</p>
+            <p style="color: #666; font-size: 14px;">Please complete all required fields marked with <span class="required">*</span></p>
+        </div>
+
+        <form id="apiRequestForm">
+            <!-- SECTION 1: PROJECT SCOPE -->
+            <div class="form-section">
+                <div class="section-title">1. PROJECT SCOPE</div>
+                
+                <div class="form-group">
+                    <label for="businessJustification">Why does this API need to be created? <span class="required">*</span></label>
+                    <textarea id="businessJustification" name="businessJustification" required 
+                              placeholder="Describe the business need, problem being solved, or opportunity being addressed..."></textarea>
+                    <div class="help-text">Provide clear business justification for API creation</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="benefitsImpacts">Benefits & Expected Impacts <span class="required">*</span></label>
+                    <textarea id="benefitsImpacts" name="benefitsImpacts" required 
+                              placeholder="Describe expected benefits, performance improvements, cost savings, or other positive impacts..."></textarea>
+                    <div class="help-text">Quantify benefits where possible (e.g., "reduce processing time by 50%")</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Project Start Date <span class="required">*</span></label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">Expected End Date</label>
+                        <input type="date" id="endDate" name="endDate">
+                        <div class="help-text">Leave blank if ongoing/permanent</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="ongoingProject" name="ongoingProject" value="true">
+                            This is an ongoing/permanent API (no end date)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: ROLES & ORGANIZATION -->
+            <div class="form-section">
+                <div class="section-title">2. ROLES & ORGANIZATION</div>
+                
+                <div class="form-group">
+                    <label for="organization">Organization (Budget Source) <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="organization" value="IV" required> IV</label>
+                        <label><input type="radio" name="organization" value="UAP-SAL" required> UAP-SAL</label>
+                        <label><input type="radio" name="organization" value="EDL" required> EDL</label>
+                        <label><input type="radio" name="organization" value="Other" required> Other</label>
+                    </div>
+                    <input type="text" id="organizationOther" name="organizationOther" placeholder="Specify other organization..." style="margin-top: 10px; display: none;">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectLeadName">Project Lead/Manager Name <span class="required">*</span></label>
+                        <input type="text" id="projectLeadName" name="projectLeadName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectLeadEmail">Project Lead/Manager Email <span class="required">*</span></label>
+                        <input type="email" id="projectLeadEmail" name="projectLeadEmail" required>
+                        <div class="help-text">Will receive notification emails</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="engineerName">Engineer/Analyst (API Creator) <span class="required">*</span></label>
+                        <input type="text" id="engineerName" name="engineerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="engineerEmail">Engineer/Analyst Email <span class="required">*</span></label>
+                        <input type="email" id="engineerEmail" name="engineerEmail" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: TIER SELECTION -->
+            <div class="form-section">
+                <div class="section-title">3. TIER SELECTION</div>
+                
+                <div class="tier-selection-chart">
+                    <div class="tier-chart-header">
+                        <div class="tier-chart-row">
+                            <div class="tier-chart-cell">TIER</div>
+                            <div class="tier-chart-cell">USAGE CAPACITY</div>
+                            <div class="tier-chart-cell">ESTIMATED COST/MONTH</div>
+                            <div class="tier-chart-cell">TYPICAL USE CASE</div>
+                            <div class="tier-chart-cell">APPROVAL REQUIRED</div>
+                        </div>
+                    </div>
+                    <div class="tier-chart-row">
+                        <div class="tier-chart-cell"><strong>Basic</strong></div>
+                        <div class="tier-chart-cell">&lt; 1M API calls</div>
+                        <div class="tier-chart-cell">$0 - $500</div>
+                        <div class="tier-chart-cell">Development, Testing</div>
+                        <div class="tier-chart-cell">Manager</div>
+                    </div>
+                    <div class="tier-chart-row">
+                        <div class="tier-chart-cell"><strong>Standard</strong></div>
+                        <div class="tier-chart-cell">1M - 10M API calls</div>
+                        <div class="tier-chart-cell">$500 - $2,000</div>
+                        <div class="tier-chart-cell">Production, Business Apps</div>
+                        <div class="tier-chart-cell">Manager</div>
+                    </div>
+                    <div class="tier-chart-row">
+                        <div class="tier-chart-cell"><strong>Premium</strong></div>
+                        <div class="tier-chart-cell">&gt; 10M API calls</div>
+                        <div class="tier-chart-cell">$2,000+</div>
+                        <div class="tier-chart-cell">Enterprise, High Volume</div>
+                        <div class="tier-chart-cell">Manager + Leadership</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Selected Tier <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="selectedTier" value="Basic" required> Basic</label>
+                        <label><input type="radio" name="selectedTier" value="Standard" required> Standard</label>
+                        <label><input type="radio" name="selectedTier" value="Premium" required> Premium</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tierJustification">Tier Selection Justification <span class="required">*</span></label>
+                    <textarea id="tierJustification" name="tierJustification" required 
+                              placeholder="Explain why this tier is appropriate based on expected usage, performance requirements, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="estimatedMonthlyCost">Estimated Monthly Cost <span class="required">*</span></label>
+                    <input type="number" id="estimatedMonthlyCost" name="estimatedMonthlyCost" min="0" step="0.01" required>
+                    <div class="help-text">Enter your best estimate based on the tier selected</div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: NAMING CRITERIA -->
+            <div class="form-section">
+                <div class="section-title">4. NAMING CRITERIA</div>
+                
+                <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                    <strong>CASI Naming Standard:</strong> &lt;AA&gt;-&lt;Env&gt;-&lt;WD&gt;-&lt;SN&gt;-apim-&lt;Inst&gt;
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="applicationAcronym">Application Acronym (AA) <span class="required">*</span></label>
+                        <input type="text" id="applicationAcronym" name="applicationAcronym" maxlength="4" required 
+                               style="text-transform: uppercase;" placeholder="e.g., CASI">
+                        <div class="help-text">2-4 characters, uppercase</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="environment">Environment (Env) <span class="required">*</span></label>
+                        <select id="environment" name="environment" required>
+                            <option value="">Select Environment</option>
+                            <option value="dev">dev - Development</option>
+                            <option value="sit">sit - System Integration Test</option>
+                            <option value="cat">cat - Customer Acceptance Test</option>
+                            <option value="prod">prod - Production</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="workload">Workload (WD) <span class="required">*</span></label>
+                        <select id="workload" name="workload" required>
+                            <option value="">Select Workload</option>
+                            <option value="data">data - Data Services</option>
+                            <option value="web">web - Web Services</option>
+                            <option value="api">api - API Services</option>
+                            <option value="auth">auth - Authentication</option>
+                            <option value="proc">proc - Processing</option>
+                            <option value="int">int - Integration</option>
+                            <option value="rpt">rpt - Reporting</option>
+                            <option value="other">other - Other (specify below)</option>
+                        </select>
+                        <input type="text" id="workloadOther" name="workloadOther" placeholder="Specify other workload..." 
+                               style="margin-top: 5px; display: none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="sequenceNumber">Sequence Number (SN)</label>
+                        <input type="text" id="sequenceNumber" name="sequenceNumber" value="01" readonly class="auto-populate">
+                        <div class="help-text">Auto-generated based on existing APIs</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="instance">Instance (Inst) <span class="required">*</span></label>
+                    <input type="text" id="instance" name="instance" maxlength="2" required 
+                           style="text-transform: uppercase;" placeholder="e.g., 01">
+                    <div class="help-text">2 characters, typically numeric (01, 02, etc.)</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Generated API Management Name Preview:</label>
+                    <div class="naming-preview" id="namingPreview">
+                        [Will auto-generate as you fill in the fields above]
+                    </div>
+                    <div class="help-text">This name will be validated for uniqueness before approval</div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: AZURE TAGGING -->
+			<div class="form-section">
+				<div class="section-title">5. AZURE TAGGING</div>
+				
+				<h4 style="color: #0078d4; margin-bottom: 10px;">Universal Required Tags</h4>
+				
+				<div class="form-row">
+					<div class="form-group">
+						<label for="tagEnv">ENV <span class="required">*</span></label>
+						<input type="text" id="tagEnv" name="tagEnv" readonly class="auto-populate">
+						<div class="help-text">Auto-filled from Environment selection</div>
+					</div>
+					<div class="form-group">
+						<label for="tagEir">EIR Number <span class="required">*</span></label>
+						<input type="text" id="tagEir" name="tagEir" required placeholder="e.g., EIR-2024-001">
+						<div class="help-text">Enterprise Infrastructure Request number</div>
+					</div>
+				</div>
+				
+				<div class="form-row">
+					<div class="form-group">
+						<label for="tagAppAcronym">App Acronym <span class="required">*</span></label>
+						<input type="text" id="tagAppAcronym" name="tagAppAcronym" readonly class="auto-populate">
+						<div class="help-text">Auto-filled from Application Acronym</div>
+					</div>
+					<div class="form-group">
+						<label for="tagAppName">App Name (Full Application Name) <span class="required">*</span></label>
+						<input type="text" id="tagAppName" name="tagAppName" required
+								placeholder="e.g., Customer Account Service Interface">
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="tagFinanceNumber">Finance Number (Budget Code) <span class="required">*</span></label>
+					<input type="text" id="tagFinanceNumber" name="tagFinanceNumber" required
+							placeholder="e.g., 12345-67890">
+					<div class="help-text">Budget/cost center code for billing</div>
+				</div>
+
+				<!-- ORGANIZATION-SPECIFIC TAGS (Dynamic) -->
+				<div id="orgSpecificTags" style="display: none;">
+					<h4 style="color: #0078d4; margin: 20px 0 10px 0;">Organization-Specific Required Tags</h4>
+					<div id="orgTagsContainer"></div>
+				</div>
+				
+				<h4 style="color: #0078d4; margin: 20px 0 10px 0;">Optional Tags</h4>
+				
+				<div class="form-row">
+					<div class="form-group">
+						<label for="tagCostCenter">Cost Center</label>
+						<input type="text" id="tagCostCenter" name="tagCostCenter" placeholder="e.g., CC-12345">
+					</div>
+					<div class="form-group">
+						<label for="tagProjectCode">Project Code</label>
+						<input type="text" id="tagProjectCode" name="tagProjectCode" placeholder="e.g., PROJ-2024-API">
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="tagOwner">Owner</label>
+					<input type="text" id="tagOwner" name="tagOwner" readonly class="auto-populate">
+					<div class="help-text">Auto-filled from Project Lead information</div>
+				</div>
+			</div>
+
+            <!-- SECTION 6: CONTACT INFORMATION -->
+            <div class="form-section">
+                <div class="section-title">6. CONTACT INFORMATION</div>
+                
+                <h4 style="color: #0078d4; margin-bottom: 10px;">Requestor Information</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="requestorName">Requestor Name <span class="required">*</span></label>
+                        <input type="text" id="requestorName" name="requestorName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestorEmail">Requestor Email <span class="required">*</span></label>
+                        <input type="email" id="requestorEmail" name="requestorEmail" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="requestorPhone">Requestor Phone</label>
+                        <input type="tel" id="requestorPhone" name="requestorPhone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label for="requestorDepartment">Department <span class="required">*</span></label>
+                        <input type="text" id="requestorDepartment" name="requestorDepartment" required>
+                    </div>
+                </div>
+
+                <h4 style="color: #0078d4; margin: 20px 0 10px 0;">Approver Information</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="approverName">Approver Name</label>
+                        <input type="text" id="approverName" name="approverName" readonly class="auto-populate">
+                        <div class="help-text">Auto-populated based on Organization + Tier</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="approverEmail">Approver Email</label>
+                        <input type="email" id="approverEmail" name="approverEmail" readonly class="auto-populate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="approverRole">Approver Role</label>
+                    <input type="text" id="approverRole" name="approverRole" readonly class="auto-populate">
+                </div>
+            </div>
+
+            <!-- SECTION 7: ADDITIONAL INFORMATION -->
+            <div class="form-section">
+                <div class="section-title">7. ADDITIONAL INFORMATION</div>
+                
+                <div class="form-group">
+                    <label for="additionalRequirements">Special Requirements or Considerations</label>
+                    <textarea id="additionalRequirements" name="additionalRequirements" 
+                              placeholder="Any special security requirements, compliance needs, integration requirements, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="businessCriticality">Business Criticality</label>
+                    <select id="businessCriticality" name="businessCriticality">
+                        <option value="">Select Criticality Level</option>
+                        <option value="Low">Low - Development/Testing</option>
+                        <option value="Medium">Medium - Business Supporting</option>
+                        <option value="High">High - Business Critical</option>
+                        <option value="Critical">Critical - Mission Critical</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="dataProcessing" name="dataProcessing" value="true">
+                            This API will process sensitive/confidential data
+                        </label>
+                        <label>
+                            <input type="checkbox" id="externalAccess" name="externalAccess" value="true">
+                            This API will be accessed by external systems/partners
+                        </label>
+                        <label>
+                            <input type="checkbox" id="highAvailability" name="highAvailability" value="true">
+                            This API requires high availability (99.9%+ uptime)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBMISSION SECTION -->
+            <div class="submit-section">
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                    <strong>Before Submitting:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Verify all required fields are completed</li>
+                        <li>Confirm the generated API name is correct</li>
+                        <li>Ensure cost estimate aligns with selected tier</li>
+                        <li>Review all contact information for accuracy</li>
+                    </ul>
+                </div>
+				
+				<!-- DIGITAL SIGNATURE -->
+				<div class="form-group">
+					<label for="digitalSignature">Digital Signature <span class="required">*</span></label>
+					<input type="text" id="digitalSignature" name="digitalSignature" required 
+						   placeholder="Type your full name to digitally sign this request">
+					<div class="help-text" style="color: #666;">By typing your name, you certify that all information provided is accurate and complete.</div>
+				</div>
+
+                <button type="button" class="btn btn-primary" onclick="submitForm()">
+                    Submit for Approval
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                    Save as Draft
+                </button>
+                <button type="button" class="btn btn-outline" onclick="resetForm()">
+                    Reset Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+		// Organization-specific tag requirements
+        const orgTagRequirements = {
+            'IV': [
+                { id: 'tagIVProjectCode', name: 'tagIVProjectCode', label: 'IV Project Code', placeholder: 'e.g., IV-PROJ-2024-001', required: true },
+                { id: 'tagIVCostCenter', name: 'tagIVCostCenter', label: 'IV Cost Center', placeholder: 'e.g., IV-CC-12345', required: true },
+                { id: 'tagIVManager', name: 'tagIVManager', label: 'IV Manager', placeholder: 'Manager name', required: false }
+            ],
+            'UAP-SAL': [
+                { id: 'tagUAPBudgetCode', name: 'tagUAPBudgetCode', label: 'UAP Budget Code', placeholder: 'e.g., UAP-BUD-2024-001', required: true },
+                { id: 'tagUAPDivision', name: 'tagUAPDivision', label: 'UAP Division', placeholder: 'Division name', required: true },
+                { id: 'tagUAPApprover', name: 'tagUAPApprover', label: 'UAP Approver', placeholder: 'Approver name', required: false }
+            ],
+            'EDL': [
+                { id: 'tagEDLDataClass', name: 'tagEDLDataClass', label: 'EDL Data Classification', placeholder: 'e.g., Confidential, Public', required: true },
+                { id: 'tagEDLCompliance', name: 'tagEDLCompliance', label: 'EDL Compliance Level', placeholder: 'e.g., FISMA, SOX', required: true },
+                { id: 'tagEDLDataOwner', name: 'tagEDLDataOwner', label: 'EDL Data Owner', placeholder: 'Data owner name', required: false }
+            ],
+            'Other': [
+                { id: 'tagOtherCode', name: 'tagOtherCode', label: 'Organization Code', placeholder: 'Org-specific code', required: true },
+                { id: 'tagOtherContact', name: 'tagOtherContact', label: 'Organization Contact', placeholder: 'Contact person', required: false }
+            ]
+        };
+
+        // Function to update organization-specific tags
+        function updateOrgSpecificTags() {
+            const selectedOrg = document.querySelector('input[name="organization"]:checked');
+            const orgTagsSection = document.getElementById('orgSpecificTags');
+            const orgTagsContainer = document.getElementById('orgTagsContainer');
+            
+            if (!selectedOrg) {
+                orgTagsSection.style.display = 'none';
+                return;
+            }
+            
+            const orgValue = selectedOrg.value;
+            const tagRequirements = orgTagRequirements[orgValue];
+            
+            if (!tagRequirements) {
+                orgTagsSection.style.display = 'none';
+                return;
+            }
+            
+            // Clear existing org-specific tags
+            orgTagsContainer.innerHTML = '';
+            
+            // Add org-specific tag fields
+            tagRequirements.forEach(tag => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                const requiredSpan = tag.required ? '<span class="required">*</span>' : '';
+                
+                formGroup.innerHTML = `
+                    <label for="${tag.id}">${tag.label} ${requiredSpan}</label>
+                    <input type="text" id="${tag.id}" name="${tag.name}" 
+                           placeholder="${tag.placeholder}" ${tag.required ? 'required' : ''}>
+                `;
+                
+                orgTagsContainer.appendChild(formGroup);
+            });
+            
+            orgTagsSection.style.display = 'block';
+        }
+		
+        // Auto-populate naming preview
+        function updateNamingPreview() {
+            const aa = document.getElementById('applicationAcronym').value.toUpperCase();
+            const env = document.getElementById('environment').value;
+            const wd = document.getElementById('workload').value === 'other' ? 
+                      document.getElementById('workloadOther').value : 
+                      document.getElementById('workload').value;
+            const sn = document.getElementById('sequenceNumber').value;
+            const inst = document.getElementById('instance').value.toUpperCase();
+            
+            if (aa && env && wd && sn && inst) {
+                const generatedName = `${aa}-${env}-${wd}-${sn}-apim-${inst}`;
+                document.getElementById('namingPreview').textContent = generatedName;
+            } else {
+                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
+            }
+        }
+
+        // Auto-populate related fields
+        function updateAutoFields() {
+            // Update ENV tag from environment selection
+            const env = document.getElementById('environment').value;
+            document.getElementById('tagEnv').value = env;
+            
+            // Update App Acronym tag
+            const aa = document.getElementById('applicationAcronym').value.toUpperCase();
+            document.getElementById('tagAppAcronym').value = aa;
+            
+            // Update Owner tag from project lead
+            const owner = document.getElementById('projectLeadName').value;
+            document.getElementById('tagOwner').value = owner;
+            
+            // Update approver based on organization and tier
+            updateApprover();
+        }
+
+        // Update approver information based on organization and tier
+        function updateApprover() {
+            const org = document.querySelector('input[name="organization"]:checked')?.value;
+            const tier = document.querySelector('input[name="selectedTier"]:checked')?.value;
+            
+            // This would typically connect to a database or API
+            // For now, showing example logic
+            let approverName = '';
+            let approverEmail = '';
+            let approverRole = '';
+            
+            if (org && tier) {
+                if (tier === 'Premium') {
+                    approverName = 'Leadership Team';
+                    approverEmail = 'leadership@company.com';
+                    approverRole = 'Director/VP Approval Required';
+                } else {
+                    switch(org) {
+                        case 'IV':
+                            approverName = 'IV Manager';
+                            approverEmail = 'iv.manager@company.com';
+                            approverRole = 'IV Department Manager';
+                            break;
+                        case 'UAP-SAL':
+                            approverName = 'UAP-SAL Manager';
+                            approverEmail = 'uap.manager@company.com';
+                            approverRole = 'UAP-SAL Department Manager';
+                            break;
+                        case 'EDL':
+                            approverName = 'EDL Manager';
+                            approverEmail = 'edl.manager@company.com';
+                            approverRole = 'EDL Department Manager';
+                            break;
+                    }
+                }
+            }
+            
+            document.getElementById('approverName').value = approverName;
+            document.getElementById('approverEmail').value = approverEmail;
+            document.getElementById('approverRole').value = approverRole;
+        }
+
+        // Show/hide conditional fields
+        function toggleConditionalFields() {
+            // Show/hide organization other field
+            const orgOther = document.querySelector('input[name="organization"][value="Other"]');
+            const orgOtherField = document.getElementById('organizationOther');
+            if (orgOther && orgOther.checked) {
+                orgOtherField.style.display = 'block';
+                orgOtherField.required = true;
+            } else {
+                orgOtherField.style.display = 'none';
+                orgOtherField.required = false;
+            }
+
+            // Show/hide workload other field
+            const workloadSelect = document.getElementById('workload');
+            const workloadOtherField = document.getElementById('workloadOther');
+            if (workloadSelect.value === 'other') {
+                workloadOtherField.style.display = 'block';
+                workloadOtherField.required = true;
+            } else {
+                workloadOtherField.style.display = 'none';
+                workloadOtherField.required = false;
+            }
+
+            // Update end date based on ongoing checkbox
+            const ongoingCheckbox = document.getElementById('ongoingProject');
+            const endDateField = document.getElementById('endDate');
+            if (ongoingCheckbox.checked) {
+                endDateField.disabled = true;
+                endDateField.value = '';
+            } else {
+                endDateField.disabled = false;
+            }
+        }
+
+        // Form validation
+        function validateForm() {
+            const form = document.getElementById('apiRequestForm');
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            let firstInvalidField = null;
+
+            // Clear previous validation errors
+            document.querySelectorAll('.validation-error').forEach(error => error.remove());
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    if (!firstInvalidField) firstInvalidField = field;
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'validation-error';
+                    errorDiv.textContent = 'This field is required';
+                    field.parentNode.appendChild(errorDiv);
+                }
+            });
+
+            // Validate radio button groups
+            const orgRadios = document.querySelectorAll('input[name="organization"]');
+            const tierRadios = document.querySelectorAll('input[name="selectedTier"]');
+            
+            if (!Array.from(orgRadios).some(radio => radio.checked)) {
+                isValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'validation-error';
+                errorDiv.textContent = 'Please select an organization';
+                orgRadios[0].closest('.form-group').appendChild(errorDiv);
+            }
+
+            if (!Array.from(tierRadios).some(radio => radio.checked)) {
+                isValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'validation-error';
+                errorDiv.textContent = 'Please select a tier';
+                tierRadios[0].closest('.form-group').appendChild(errorDiv);
+            }
+
+            // Validate naming preview is generated
+            const namingPreview = document.getElementById('namingPreview').textContent;
+            if (namingPreview === '[Will auto-generate as you fill in the fields above]') {
+                isValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'validation-error';
+                errorDiv.textContent = 'Please complete all naming fields to generate API name';
+                document.getElementById('namingPreview').parentNode.appendChild(errorDiv);
+            }
+
+            if (!isValid && firstInvalidField) {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+            }
+
+            return isValid;
+        }
+
+        // Submit form
+		function submitForm() {
+			if (!validateForm()) {
+				alert('Please correct the errors in the form before submitting.');
+				return;
+			}
+			
+			// Collect form data with safety checks
+			const formData = new FormData(document.getElementById('apiRequestForm'));
+			const data = Object.fromEntries(formData.entries());
+			
+			// Add generated name to data
+			const namingPreview = document.getElementById('namingPreview');
+			data.generatedApiName = namingPreview ? namingPreview.textContent : 'N/A';
+			
+			// Add timestamp
+			data.submissionTimestamp = new Date().toISOString();
+			
+			// Add request ID
+			data.requestId = 'REQ-' + Date.now();
+			
+			// Get tier with better detection
+			const tierElement = document.querySelector('input[name="tier"]:checked') || 
+							   document.querySelector('input[name="selectedTier"]:checked');
+			const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
+			data.selectedTier = selectedTier;
+			
+			// Build MEDIUM-length email body with key details
+			let emailBody = `=== API MANAGEMENT REQUEST ===\n\n`;
+			emailBody += `Request ID: ${data.requestId}\n`;
+			emailBody += `Submission Date: ${new Date().toLocaleString()}\n`;
+			emailBody += `Generated API Name: ${data.generatedApiName}\n\n`;
+			
+			emailBody += `=== PROJECT SCOPE ===\n`;
+			emailBody += `Business Justification: ${data.businessJustification || 'N/A'}\n`;
+			emailBody += `Benefits & Impacts: ${data.benefitsImpacts || 'N/A'}\n`;
+			emailBody += `Start Date: ${data.startDate || 'N/A'}\n`;
+			emailBody += `End Date: ${data.endDate || 'N/A'}\n\n`;
+			
+			emailBody += `=== TIER & COST ===\n`;
+			emailBody += `Selected Tier: ${selectedTier}\n`;
+			emailBody += `Tier Justification: ${data.tierJustification || 'N/A'}\n`;
+			emailBody += `Estimated Monthly Cost: $${data.estimatedMonthlyCost || '0'}\n\n`;
+			
+			emailBody += `=== CONTACT INFO ===\n`;
+			emailBody += `Requestor: ${data.requestorName || 'N/A'} (${data.requestorEmail || 'N/A'})\n`;
+			emailBody += `Phone: ${data.requestorPhone || 'N/A'}\n`;
+			emailBody += `Department: ${data.requestorDepartment || 'N/A'}\n\n`;
+			
+			emailBody += `=== APPROVAL INFO ===\n`;
+			emailBody += `Approver: ${data.approverName || 'N/A'} (${data.approverEmail || 'N/A'})\n`;
+			emailBody += `Approver Role: ${data.approverRole || 'N/A'}\n\n`;
+
+			emailBody += `=== DIGITAL SIGNATURE & VERIFICATION ===\n`;
+			emailBody += `Signed by: ${data.digitalSignature || data.requestorName}\n`;
+			emailBody += `Signature Date: ${new Date().toISOString()}\n`;
+			emailBody += `Browser: ${navigator.userAgent}\n`;
+			emailBody += `Timestamp: ${Date.now()}\n`;
+			emailBody += `Form Version: 1.0\n\n`;
+
+			emailBody += `=== APPROVAL REQUIRED ===\n`;
+			emailBody += `To approve this request, reply to this email with:\n\n`;
+			emailBody += `DECISION: [APPROVED or REJECTED]\n`;
+			emailBody += `APPROVER SIGNATURE: [Type your full name]\n`;
+			emailBody += `APPROVAL DATE: ${new Date().toLocaleDateString()}\n`;
+			emailBody += `COMMENTS: [Optional feedback or rejection reason]\n\n`;
+			
+			emailBody += `--- Please review and approve this request ---`;
+			
+			// Create email subject
+			const subject = `API Request - ${data.generatedApiName} - ${selectedTier} Tier`;
+			
+			// Open email client
+			const mailtoLink = `mailto:casey.y.smith@usps.gov?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+			
+			// Show confirmation and open email
+			alert(`Request prepared successfully!\n\nRequest ID: ${data.requestId}\n\nYour email client will open to send this request.`);
+			
+			// Open email client
+			window.location.href = mailtoLink;
+			
+			// Save submission to localStorage for tracking
+			const submissions = JSON.parse(localStorage.getItem('apiSubmissions') || '[]');
+			submissions.push({
+				requestId: data.requestId,
+				submissionDate: new Date().toISOString(),
+				apiName: data.generatedApiName,
+				tier: selectedTier,
+				status: 'Submitted'
+			});
+			localStorage.setItem('apiSubmissions', JSON.stringify(submissions));
+		}
+
+        // Save as draft
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('apiRequestForm'));
+            const data = Object.fromEntries(formData.entries());
+            
+            // Save to localStorage for now (in real app, save to backend)
+            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+            
+            alert('Draft saved successfully!');
+        }
+
+        // Load draft
+        function loadDraft() {
+            const draft = localStorage.getItem('apiRequestDraft');
+            if (draft) {
+                const data = JSON.parse(draft);
+                
+                // Populate form fields
+                Object.keys(data).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'radio') {
+                            const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
+                            if (radio) radio.checked = true;
+                        } else if (field.type === 'checkbox') {
+                            field.checked = data[key] === 'true';
+                        } else {
+                            field.value = data[key];
+                        }
+                    }
+                });
+                
+                // Update dependent fields
+                updateAutoFields();
+                updateNamingPreview();
+                toggleConditionalFields();
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+                document.getElementById('apiRequestForm').reset();
+                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
+                
+                // Clear auto-populated fields
+                document.getElementById('tagEnv').value = '';
+                document.getElementById('tagAppAcronym').value = '';
+                document.getElementById('tagOwner').value = '';
+                document.getElementById('approverName').value = '';
+                document.getElementById('approverEmail').value = '';
+                document.getElementById('approverRole').value = '';
+                
+                // Clear validation errors
+                document.querySelectorAll('.validation-error').forEach(error => error.remove());
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load draft if exists
+            loadDraft();
+            
+            // Add event listeners for auto-updates
+            document.getElementById('applicationAcronym').addEventListener('input', function() {
+                updateNamingPreview();
+                updateAutoFields();
+            });
+            
+            document.getElementById('environment').addEventListener('change', function() {
+                updateNamingPreview();
+                updateAutoFields();
+            });
+            
+            document.getElementById('workload').addEventListener('change', function() {
+                updateNamingPreview();
+                toggleConditionalFields();
+            });
+            
+            document.getElementById('instance').addEventListener('input', updateNamingPreview);
+            
+            document.getElementById('projectLeadName').addEventListener('input', updateAutoFields);
+            
+            // Organization radio buttons
+			document.querySelectorAll('input[name="organization"]').forEach(radio => {
+				radio.addEventListener('change', function() {
+					updateAutoFields();
+					toggleConditionalFields();
+					updateOrgSpecificTags(); // ADD THIS LINE
+				});
+			});
+            
+            // Tier radio buttons
+            document.querySelectorAll('input[name="selectedTier"]').forEach(radio => {
+                radio.addEventListener('change', updateAutoFields);
+            });
+            
+            // Ongoing project checkbox
+            document.getElementById('ongoingProject').addEventListener('change', toggleConditionalFields);
+            
+            // Auto-save draft every 2 minutes
+            setInterval(function() {
+                const formData = new FormData(document.getElementById('apiRequestForm'));
+                const data = Object.fromEntries(formData.entries());
+                if (Object.keys(data).some(key => data[key])) {
+                    localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+                }
+            }, 120000); // 2 minutes
+        });
+    </script>
+</body>
+</html>
