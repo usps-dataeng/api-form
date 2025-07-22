@@ -832,7 +832,7 @@
 		const data = Object.fromEntries(formData.entries());
 		
 		// Generate unique request ID
-		data.requestId = 'REQ-' + Date.now();
+		data.requestId = 'REQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 		data.submissionTimestamp = new Date().toISOString();
 		data.generatedApiName = document.getElementById('namingPreview').textContent;
 		
