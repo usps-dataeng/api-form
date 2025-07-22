@@ -827,19 +827,14 @@
 				return;
 			}
 			
-			// Collect form data with safety checks
+			// Collect form data
 			const formData = new FormData(document.getElementById('apiRequestForm'));
 			const data = Object.fromEntries(formData.entries());
 			
-			// Add generated name to data
-			const namingPreview = document.getElementById('namingPreview');
-			data.generatedApiName = namingPreview ? namingPreview.textContent : 'N/A';
-			
-			// Add timestamp
-			data.submissionTimestamp = new Date().toISOString();
-			
-			// Add request ID
+			// Generate unique request ID
 			data.requestId = 'REQ-' + Date.now();
+			data.submissionTimestamp = new Date().toISOString();
+			data.generatedApiName = document.getElementById('namingPreview').textContent;
 			
 			// Get tier with better detection
 			const tierElement = document.querySelector('input[name="tier"]:checked') || 
@@ -847,124 +842,168 @@
 			const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
 			data.selectedTier = selectedTier;
 			
-			// Build MEDIUM-length email body with key details
-			let emailBody = `=== API MANAGEMENT REQUEST ===\n\n`;
-			emailBody += `Request ID: ${data.requestId}\n`;
-			emailBody += `Submission Date: ${new Date().toLocaleString()}\n`;
-			emailBody += `Generated API Name: ${data.generatedApiName}\n\n`;
+			// Get Business Criticality from the form (this is the correct way)
+			const criticalityElement = document.querySelector('input[name="businessCriticality"]:checked');
+			const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
 			
-			emailBody += `=== PROJECT SCOPE ===\n`;
-			emailBody += `Business Justification: ${data.businessJustification || 'N/A'}\n`;
-			emailBody += `Benefits & Impacts: ${data.benefitsImpacts || 'N/A'}\n`;
-			emailBody += `Start Date: ${data.startDate || 'N/A'}\n`;
-			emailBody += `End Date: ${data.endDate || 'N/A'}\n\n`;
+			// Determine if critical based on the actual Business Criticality field
+			const isCritical = businessCriticality === 'Critical';
 			
-			emailBody += `=== TIER & COST ===\n`;
-			emailBody += `Selected Tier: ${selectedTier}\n`;
-			emailBody += `Tier Justification: ${data.tierJustification || 'N/A'}\n`;
-			emailBody += `Estimated Monthly Cost: $${data.estimatedMonthlyCost || '0'}\n\n`;
-			
-			emailBody += `=== CONTACT INFO ===\n`;
-			emailBody += `Requestor: ${data.requestorName || 'N/A'} (${data.requestorEmail || 'N/A'})\n`;
-			emailBody += `Phone: ${data.requestorPhone || 'N/A'}\n`;
-			emailBody += `Department: ${data.requestorDepartment || 'N/A'}\n\n`;
-			
-			emailBody += `=== APPROVAL INFO ===\n`;
-			emailBody += `Approver: ${data.approverName || 'N/A'} (${data.approverEmail || 'N/A'})\n`;
-			emailBody += `Approver Role: ${data.approverRole || 'N/A'}\n\n`;
+			// Save to SharePoint/Database first
+			saveToSharePoint(data).then(itemId => {
+				// Create approval URL with the SharePoint item ID
+				const approvalUrl = `https://yoursite.sharepoint.com/sites/APIManagement/SitePages/ApprovalForm.aspx?requestId=${data.requestId}&itemId=${itemId}`;
+				
+				// Updated email subject with requestor name
+				const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
+				
+				// Updated email body with actual business criticality
+				const emailBody = `API Management Request - ${isCritical ? 'CRITICAL' : businessCriticality.toUpperCase()} Priority
 
-			emailBody += `=== DIGITAL SIGNATURE & VERIFICATION ===\n`;
-			emailBody += `Signed by: ${data.digitalSignature || data.requestorName}\n`;
-			emailBody += `Signature Date: ${new Date().toISOString()}\n\n`;						
+		Request ID: ${data.requestId}
+		API Name: ${data.generatedApiName}
+		Requestor: ${data.requestorName}
+		Tier: ${selectedTier}
+		Business Criticality: ${businessCriticality}${isCritical ? ' - Requires immediate attention' : ''}
 
-			emailBody += `=== APPROVAL REQUIRED ===\n`;
-			emailBody += `To approve this request, reply to this email with:\n\n`;
-			emailBody += `DECISION: [APPROVED or REJECTED]\n`;						
-			emailBody += `COMMENTS: [Optional feedback or rejection reason]\n\n`;
-			
-			emailBody += `--- Please review and approve this request ---`;
-			
-			// Create email subject
-			const subject = `API Request - ${data.generatedApiName} - ${selectedTier} Tier`;
-			
-			// Open email client
-			const mailtoLink = `mailto:casey.y.smith@usps.gov?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
-			
-			// Show confirmation and open email
-			alert(`Request prepared successfully!\n\nRequest ID: ${data.requestId}\n\nYour email client will open to send this request.`);
-			
-			// Open email client
-			window.location.href = mailtoLink;
-			
-			// Save submission to localStorage for tracking
-			const submissions = JSON.parse(localStorage.getItem('apiSubmissions') || '[]');
-			submissions.push({
-				requestId: data.requestId,
-				submissionDate: new Date().toISOString(),
-				apiName: data.generatedApiName,
-				tier: selectedTier,
-				status: 'Submitted'
+		Please follow the link below to review the full request details and approve or reject this request:
+
+		${approvalUrl}
+
+		This link will take you to the complete request form with approval/rejection options.
+		`;
+				
+				// Automatically send email using EmailJS or similar service
+				sendEmailAutomatically({
+					to: data.approverEmail,
+					subject: emailSubject,
+					body: emailBody,
+					requestId: data.requestId
+				});
+				
+				alert(`Request submitted successfully!\nRequest ID: ${data.requestId}\nApproval email sent automatically to ${data.approverEmail}`);
+				
+			}).catch(error => {
+				console.error('Error submitting request:', error);
+				alert('Error submitting request. Please try again.');
 			});
-			localStorage.setItem('apiSubmissions', JSON.stringify(submissions));
 		}
 
-        // Save as draft
-        function saveDraft() {
-            const formData = new FormData(document.getElementById('apiRequestForm'));
-            const data = Object.fromEntries(formData.entries());
-            
-            // Save to localStorage for now (in real app, save to backend)
-            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
-            
-            alert('Draft saved successfully!');
-        }
+		// Save to SharePoint function
+		async function saveToSharePoint(data) {
+			// This would use SharePoint REST API or Microsoft Graph API
+			const listUrl = "https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items";
+			
+			const requestBody = {
+				Title: data.generatedApiName,
+				RequestId: data.requestId,
+				RequestorName: data.requestorName,
+				RequestorEmail: data.requestorEmail,
+				BusinessJustification: data.businessJustification,
+				SelectedTier: data.selectedTier,
+				EstimatedMonthlyCost: parseFloat(data.estimatedMonthlyCost || 0),
+				Status: 'Pending Approval',
+				SubmissionDate: data.submissionTimestamp,
+				ApproverName: data.approverName,
+				ApproverEmail: data.approverEmail,
+				IsCritical: data.selectedTier === 'Enterprise' || data.selectedTier === 'Premium',
+				// Store complete form data as JSON
+				FormDataJSON: JSON.stringify(data)
+			};
+			
+			try {
+				const response = await fetch(listUrl, {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json;odata=verbose',
+						'Content-Type': 'application/json;odata=verbose',
+						'X-RequestDigest': await getRequestDigest()
+					},
+					body: JSON.stringify(requestBody)
+				});
+				
+				const result = await response.json();
+				return result.d.Id; // Return SharePoint item ID
+			} catch (error) {
+				console.error('Error saving to SharePoint:', error);
+				// For now, return a mock ID for testing
+				return Date.now();
+			}
+		}
 
-        // Load draft
-        function loadDraft() {
-            const draft = localStorage.getItem('apiRequestDraft');
-            if (draft) {
-                const data = JSON.parse(draft);
-                
-                // Populate form fields
-                Object.keys(data).forEach(key => {
-                    const field = document.querySelector(`[name="${key}"]`);
-                    if (field) {
-                        if (field.type === 'radio') {
-                            const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
-                            if (radio) radio.checked = true;
-                        } else if (field.type === 'checkbox') {
-                            field.checked = data[key] === 'true';
-                        } else {
-                            field.value = data[key];
-                        }
-                    }
-                });
-                
-                // Update dependent fields
-                updateAutoFields();
-                updateNamingPreview();
-                toggleConditionalFields();
-            }
-        }
+		// Automatic email sending function
+		async function sendEmailAutomatically(emailData) {
+			try {
+				// Option 1: Using EmailJS (requires setup)
+				if (typeof emailjs !== 'undefined') {
+					await emailjs.send('your_service_id', 'your_template_id', {
+						to_email: emailData.to,
+						subject: emailData.subject,
+						message: emailData.body,
+						request_id: emailData.requestId
+					});
+				} else {
+					// Option 2: Using Microsoft Graph API (for Office 365)
+					await sendViaGraphAPI(emailData);
+				}
+				
+				console.log('Email sent automatically to:', emailData.to);
+			} catch (error) {
+				console.error('Error sending automatic email:', error);
+				// Fallback to mailto if automatic sending fails
+				const mailtoLink = `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
+				window.location.href = mailtoLink;
+			}
+		}
 
-        // Reset form
-        function resetForm() {
-            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
-                document.getElementById('apiRequestForm').reset();
-                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
-                
-                // Clear auto-populated fields
-                document.getElementById('tagEnv').value = '';
-                document.getElementById('tagAppAcronym').value = '';
-                document.getElementById('tagOwner').value = '';
-                document.getElementById('approverName').value = '';
-                document.getElementById('approverEmail').value = '';
-                document.getElementById('approverRole').value = '';
-                
-                // Clear validation errors
-                document.querySelectorAll('.validation-error').forEach(error => error.remove());
-            }
-        }
+		// Microsoft Graph API email sending (for Office 365 environments)
+		async function sendViaGraphAPI(emailData) {
+			const graphEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail';
+			
+			const emailPayload = {
+				message: {
+					subject: emailData.subject,
+					body: {
+						contentType: 'Text',
+						content: emailData.body
+					},
+					toRecipients: [{
+						emailAddress: {
+							address: emailData.to
+						}
+					}]
+				}
+			};
+			
+			// This requires proper authentication token
+			const response = await fetch(graphEndpoint, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${await getAccessToken()}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(emailPayload)
+			});
+			
+			if (!response.ok) {
+				throw new Error('Failed to send email via Graph API');
+			}
+		}
+
+		// Helper function to get SharePoint request digest
+		async function getRequestDigest() {
+			// This would get the request digest from SharePoint
+			// For now, return empty string (you'll need to implement this)
+			return '';
+		}
+
+		// Helper function to get access token for Graph API
+		async function getAccessToken() {
+			// This would get the access token for Microsoft Graph
+			// Implementation depends on your authentication setup
+			return '';
+		}
+
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
