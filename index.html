@@ -852,7 +852,7 @@
 		// Save to SharePoint/Database first
 		saveToSharePoint(data).then(itemId => {
 			// Create approval URL with the SharePoint item ID
-			const approvalUrl = `https://usps-dataeng.github.io/api-form/approval_form.html?requestId=${data.requestId}&data=${encodeURIComponent(JSON.stringify(data))}`;
+			const approvalUrl = `https://usps-dataeng.github.io/api-form/approval_form.html?requestId=${data.requestId}&itemId=${itemId}`;
 			
 			// Updated email subject with requestor name
 			const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
