@@ -821,189 +821,188 @@
         }
 
         // Submit form
-		function submitForm() {
-			if (!validateForm()) {
-				alert('Please correct the errors in the form before submitting.');
-				return;
-			}
+	function submitForm() {
+		if (!validateForm()) {
+			alert('Please correct the errors in the form before submitting.');
+			return;
+		}
+		
+		// Collect form data
+		const formData = new FormData(document.getElementById('apiRequestForm'));
+		const data = Object.fromEntries(formData.entries());
+		
+		// Generate unique request ID
+		data.requestId = 'REQ-' + Date.now();
+		data.submissionTimestamp = new Date().toISOString();
+		data.generatedApiName = document.getElementById('namingPreview').textContent;
+		
+		// Get tier with better detection
+		const tierElement = document.querySelector('input[name="tier"]:checked') || 
+						   document.querySelector('input[name="selectedTier"]:checked');
+		const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
+		data.selectedTier = selectedTier;
+		
+		// Get Business Criticality from the form (corrected)
+		const criticalityElement = document.getElementById('businessCriticality');
+		const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
+		
+		// Determine if critical based on the actual Business Criticality field
+		const isCritical = businessCriticality === 'Critical';
+		
+		// Save to SharePoint/Database first
+		saveToSharePoint(data).then(itemId => {
+			// Create approval URL with the SharePoint item ID
+			const approvalUrl = `https://yoursite.sharepoint.com/sites/APIManagement/SitePages/ApprovalForm.aspx?requestId=${data.requestId}&itemId=${itemId}`;
 			
-			// Collect form data
-			const formData = new FormData(document.getElementById('apiRequestForm'));
-			const data = Object.fromEntries(formData.entries());
+			// Updated email subject with requestor name
+			const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
 			
-			// Generate unique request ID
-			data.requestId = 'REQ-' + Date.now();
-			data.submissionTimestamp = new Date().toISOString();
-			data.generatedApiName = document.getElementById('namingPreview').textContent;
-			
-			// Get tier with better detection
-			const tierElement = document.querySelector('input[name="tier"]:checked') || 
-							   document.querySelector('input[name="selectedTier"]:checked');
-			const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
-			data.selectedTier = selectedTier;
-			
-			// Get Business Criticality from the form (corrected)
-			const criticalityElement = document.getElementById('businessCriticality');
-			const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
-			
-			// Determine if critical based on the actual Business Criticality field
-			const isCritical = businessCriticality === 'Critical';
-			
-			// Save to SharePoint/Database first
-			saveToSharePoint(data).then(itemId => {
-				// Create approval URL with the SharePoint item ID
-				const approvalUrl = `https://yoursite.sharepoint.com/sites/APIManagement/SitePages/ApprovalForm.aspx?requestId=${data.requestId}&itemId=${itemId}`;
-				
-				// Updated email subject with requestor name
-				const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
-				
-				// Updated email body with actual business criticality
-				const emailBody = `API Management Request - ${isCritical ? 'CRITICAL' : businessCriticality.toUpperCase()} Priority
+			// Updated email body with actual business criticality
+			const emailBody = `API Management Request - ${isCritical ? 'CRITICAL' : businessCriticality.toUpperCase()} Priority
 
-		Request ID: ${data.requestId}
-		API Name: ${data.generatedApiName}
-		Requestor: ${data.requestorName}
-		Tier: ${selectedTier}
-		Business Criticality: ${businessCriticality}${isCritical ? ' - Requires immediate attention' : ''}
+	Request ID: ${data.requestId}
+	API Name: ${data.generatedApiName}
+	Requestor: ${data.requestorName}
+	Tier: ${selectedTier}
+	Business Criticality: ${businessCriticality}${isCritical ? ' - Requires immediate attention' : ''}
 
-		Please follow the link below to review the full request details and approve or reject this request:
+	Please follow the link below to review the full request details and approve or reject this request:
 
-		${approvalUrl}
+	${approvalUrl}
 
-		This link will take you to the complete request form with approval/rejection options.
-		`;
-				
-				// Automatically send email using EmailJS or similar service
-				sendEmailAutomatically({
-					to: data.approverEmail,
-					subject: emailSubject,
-					body: emailBody,
-					requestId: data.requestId
-				});
-				
-				alert(`Request submitted successfully!\nRequest ID: ${data.requestId}\nApproval email sent automatically to ${data.approverEmail}`);
-				
-			}).catch(error => {
-				console.error('Error submitting request:', error);
-				alert('Error submitting request. Please try again.');
+	This link will take you to the complete request form with approval/rejection options.
+	`;
+			
+			// Automatically send email using EmailJS or similar service
+			sendEmailAutomatically({
+				to: data.approverEmail,
+				subject: emailSubject,
+				body: emailBody,
+				requestId: data.requestId
 			});
-		}
+			
+			alert(`Request submitted successfully!\nRequest ID: ${data.requestId}\nApproval email sent automatically to ${data.approverEmail}`);
+			
+		}).catch(error => {
+			console.error('Error submitting request:', error);
+			alert('Error submitting request. Please try again.');
+		});
+	}
 
-		// Save to SharePoint function
-		async function saveToSharePoint(data) {
-			// This would use SharePoint REST API or Microsoft Graph API
-			const listUrl = "https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items";
-			
-			const requestBody = {
-				Title: data.generatedApiName,
-				RequestId: data.requestId,
-				RequestorName: data.requestorName,
-				RequestorEmail: data.requestorEmail,
-				BusinessJustification: data.businessJustification,
-				SelectedTier: data.selectedTier,
-				EstimatedMonthlyCost: parseFloat(data.estimatedMonthlyCost || 0),
-				Status: 'Pending Approval',
-				SubmissionDate: data.submissionTimestamp,
-				ApproverName: data.approverName,
-				ApproverEmail: data.approverEmail,
-				IsCritical: data.selectedTier === 'Enterprise' || data.selectedTier === 'Premium',
-				// Store complete form data as JSON
-				FormDataJSON: JSON.stringify(data)
-			};
-			
-			try {
-				const response = await fetch(listUrl, {
-					method: 'POST',
-					headers: {
-						'Accept': 'application/json;odata=verbose',
-						'Content-Type': 'application/json;odata=verbose',
-						'X-RequestDigest': await getRequestDigest()
-					},
-					body: JSON.stringify(requestBody)
-				});
-				
-				const result = await response.json();
-				return result.d.Id; // Return SharePoint item ID
-			} catch (error) {
-				console.error('Error saving to SharePoint:', error);
-				// For now, return a mock ID for testing
-				return Date.now();
-			}
-		}
-
-		// Automatic email sending function
-		async function sendEmailAutomatically(emailData) {
-			try {
-				// Option 1: Using EmailJS (requires setup)
-				if (typeof emailjs !== 'undefined') {
-					await emailjs.send('your_service_id', 'your_template_id', {
-						to_email: emailData.to,
-						subject: emailData.subject,
-						message: emailData.body,
-						request_id: emailData.requestId
-					});
-				} else {
-					// Option 2: Using Microsoft Graph API (for Office 365)
-					await sendViaGraphAPI(emailData);
-				}
-				
-				console.log('Email sent automatically to:', emailData.to);
-			} catch (error) {
-				console.error('Error sending automatic email:', error);
-				// Fallback to mailto if automatic sending fails
-				const mailtoLink = `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
-				window.location.href = mailtoLink;
-			}
-		}
-
-		// Microsoft Graph API email sending (for Office 365 environments)
-		async function sendViaGraphAPI(emailData) {
-			const graphEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail';
-			
-			const emailPayload = {
-				message: {
-					subject: emailData.subject,
-					body: {
-						contentType: 'Text',
-						content: emailData.body
-					},
-					toRecipients: [{
-						emailAddress: {
-							address: emailData.to
-						}
-					}]
-				}
-			};
-			
-			// This requires proper authentication token
-			const response = await fetch(graphEndpoint, {
+	// Save to SharePoint function
+	async function saveToSharePoint(data) {
+		// This would use SharePoint REST API or Microsoft Graph API
+		const listUrl = "https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items";
+		
+		const requestBody = {
+			Title: data.generatedApiName,
+			RequestId: data.requestId,
+			RequestorName: data.requestorName,
+			RequestorEmail: data.requestorEmail,
+			BusinessJustification: data.businessJustification,
+			SelectedTier: data.selectedTier,
+			EstimatedMonthlyCost: parseFloat(data.estimatedMonthlyCost || 0),
+			Status: 'Pending Approval',
+			SubmissionDate: data.submissionTimestamp,
+			ApproverName: data.approverName,
+			ApproverEmail: data.approverEmail,
+			IsCritical: data.selectedTier === 'Enterprise' || data.selectedTier === 'Premium',
+			// Store complete form data as JSON
+			FormDataJSON: JSON.stringify(data)
+		};
+		
+		try {
+			const response = await fetch(listUrl, {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${await getAccessToken()}`,
-					'Content-Type': 'application/json'
+					'Accept': 'application/json;odata=verbose',
+					'Content-Type': 'application/json;odata=verbose',
+					'X-RequestDigest': await getRequestDigest()
 				},
-				body: JSON.stringify(emailPayload)
+				body: JSON.stringify(requestBody)
 			});
 			
-			if (!response.ok) {
-				throw new Error('Failed to send email via Graph API');
+			const result = await response.json();
+			return result.d.Id; // Return SharePoint item ID
+		} catch (error) {
+			console.error('Error saving to SharePoint:', error);
+			// For now, return a mock ID for testing
+			return Date.now();
+		}
+	}
+
+	// Automatic email sending function
+	async function sendEmailAutomatically(emailData) {
+		try {
+			// Option 1: Using EmailJS (requires setup)
+			if (typeof emailjs !== 'undefined') {
+				await emailjs.send('your_service_id', 'your_template_id', {
+					to_email: emailData.to,
+					subject: emailData.subject,
+					message: emailData.body,
+					request_id: emailData.requestId
+				});
+			} else {
+				// Option 2: Using Microsoft Graph API (for Office 365)
+				await sendViaGraphAPI(emailData);
 			}
+			
+			console.log('Email sent automatically to:', emailData.to);
+		} catch (error) {
+			console.error('Error sending automatic email:', error);
+			// Fallback to mailto if automatic sending fails
+			const mailtoLink = `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
+			window.location.href = mailtoLink;
 		}
+	}
 
-		// Helper function to get SharePoint request digest
-		async function getRequestDigest() {
-			// This would get the request digest from SharePoint
-			// For now, return empty string (you'll need to implement this)
-			return '';
+	// Microsoft Graph API email sending (for Office 365 environments)
+	async function sendViaGraphAPI(emailData) {
+		const graphEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail';
+		
+		const emailPayload = {
+			message: {
+				subject: emailData.subject,
+				body: {
+					contentType: 'Text',
+					content: emailData.body
+				},
+				toRecipients: [{
+					emailAddress: {
+						address: emailData.to
+					}
+				}]
+			}
+		};
+		
+		// This requires proper authentication token
+		const response = await fetch(graphEndpoint, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${await getAccessToken()}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(emailPayload)
+		});
+		
+		if (!response.ok) {
+			throw new Error('Failed to send email via Graph API');
 		}
+	}
 
-		// Helper function to get access token for Graph API
-		async function getAccessToken() {
-			// This would get the access token for Microsoft Graph
-			// Implementation depends on your authentication setup
-			return '';
-		}
+	// Helper function to get SharePoint request digest
+	async function getRequestDigest() {
+		// This would get the request digest from SharePoint
+		// For now, return empty string (you'll need to implement this)
+		return '';
+	}
 
+	// Helper function to get access token for Graph API
+	async function getAccessToken() {
+		// This would get the access token for Microsoft Graph
+		// Implementation depends on your authentication setup
+		return '';
+	}
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
