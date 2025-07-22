@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Request Approval</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .approval-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #0078d4;
+            color: white;
+            border-radius: 8px;
+        }
+        .request-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .detail-label {
+            font-weight: bold;
+            width: 200px;
+            color: #0078d4;
+        }
+        .detail-value {
+            flex: 1;
+        }
+        .approval-actions {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #ffeaa7;
+        }
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-approve {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-approve:hover {
+            background-color: #218838;
+        }
+        .btn-reject {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-reject:hover {
+            background-color: #c82333;
+        }
+        .btn-request-info {
+            background-color: #ffc107;
+            color: black;
+        }
+        .btn-request-info:hover {
+            background-color: #e0a800;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="approval-header">
+            <h1>API Management Request - Approval Required</h1>
+            <p id="requestStatus">Status: Pending Approval</p>
+        </div>
+
+        <div class="request-details">
+            <h3>Request Details</h3>
+            <div id="requestDetailsContainer">
+                <p>Loading request details...</p>
+            </div>
+        </div>
+
+        <div class="approval-actions">
+            <h3>Approval Decision</h3>
+            <div style="margin-bottom: 20px;">
+                <label for="approvalComments">Comments:</label><br>
+                <textarea id="approvalComments" rows="4" 
+                         placeholder="Add any comments or conditions for approval/rejection..."></textarea>
+            </div>
+            
+            <button class="btn btn-approve" onclick="approveRequest()">
+                ✓ APPROVE REQUEST
+            </button>
+            <button class="btn btn-reject" onclick="rejectRequest()">
+                ✗ REJECT REQUEST
+            </button>
+            <button class="btn btn-request-info" onclick="requestMoreInfo()">
+                ? REQUEST MORE INFORMATION
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Load request details when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const requestId = getUrlParameter('requestId');
+            const itemId = getUrlParameter('itemId');
+            
+            if (requestId) {
+                loadRequestDetails(requestId, itemId);
+            } else {
+                // Show sample data for testing
+                displaySampleData();
+            }
+        });
+
+        // Display sample data for testing
+        function displaySampleData() {
+            const sampleData = {
+                requestId: 'REQ-' + Date.now(),
+                generatedApiName: 'CASI-prod-api-01-apim-01',
+                requestorName: 'John Doe',
+                requestorEmail: 'john.doe@company.com',
+                organization: 'IV',
+                selectedTier: 'Standard',
+                businessCriticality: 'High',
+                estimatedMonthlyCost: '1500',
+                businessJustification: 'Need API for customer data integration to improve service delivery and reduce manual processing time.',
+                projectLeadName: 'Jane Smith',
+                engineerName: 'Bob Johnson',
+                startDate: '2024-02-01',
+                environment: 'prod',
+                applicationAcronym: 'CASI',
+                submissionTimestamp: new Date().toISOString()
+            };
+            displayRequestDetails(sampleData);
+        }
+
+        // Display request details
+        function displayRequestDetails(data) {
+            const container = document.getElementById('requestDetailsContainer');
+            
+            const details = [
+                { label: 'Request ID', value: data.requestId },
+                { label: 'Generated API Name', value: data.generatedApiName },
+                { label: 'Requestor', value: data.requestorName },
+                { label: 'Requestor Email', value: data.requestorEmail },
+                { label: 'Organization', value: data.organization },
+                { label: 'Selected Tier', value: data.selectedTier },
+                { label: 'Business Criticality', value: data.businessCriticality },
+                { label: 'Estimated Monthly Cost', value: `$${data.estimatedMonthlyCost}` },
+                { label: 'Business Justification', value: data.businessJustification },
+                { label: 'Project Lead', value: data.projectLeadName },
+                { label: 'Engineer/Analyst', value: data.engineerName },
+                { label: 'Start Date', value: data.startDate },
+                { label: 'Environment', value: data.environment },
+                { label: 'Application Acronym', value: data.applicationAcronym },
+                { label: 'Submission Date', value: new Date(data.submissionTimestamp).toLocaleString() }
+            ];
+
+            container.innerHTML = details.map(detail => `
+                <div class="detail-row">
+                    <div class="detail-label">${detail.label}:</div>
+                    <div class="detail-value">${detail.value || 'N/A'}</div>
+                </div>
+            `).join('');
+        }
+
+        // Approval functions
+        function approveRequest() {
+            const comments = document.getElementById('approvalComments').value;
+            const requestId = getUrlParameter('requestId') || 'SAMPLE-REQ';
+            
+            if (confirm('Are you sure you want to APPROVE this API request?')) {
+                alert(`Request ${requestId} approved successfully!\nComments: ${comments || 'None'}`);
+                disableApprovalButtons();
+                document.getElementById('requestStatus').textContent = 'Status: APPROVED';
+            }
+        }
+
+        function rejectRequest() {
+            const comments = document.getElementById('approvalComments').value;
+            const requestId = getUrlParameter('requestId') || 'SAMPLE-REQ';
+            
+            if (!comments.trim()) {
+                alert('Please provide comments explaining the rejection reason.');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to REJECT this API request?')) {
+                alert(`Request ${requestId} rejected.\nComments: ${comments}`);
+                disableApprovalButtons();
+                document.getElementById('requestStatus').textContent = 'Status: REJECTED';
+            }
+        }
+
+        function requestMoreInfo() {
+            const comments = document.getElementById('approvalComments').value;
+            const requestId = getUrlParameter('requestId') || 'SAMPLE-REQ';
+            
+            if (!comments.trim()) {
+                alert('Please specify what additional information is needed.');
+                return;
+            }
+            
+            alert(`More information requested for ${requestId}.\nComments: ${comments}`);
+            disableApprovalButtons();
+            document.getElementById('requestStatus').textContent = 'Status: MORE INFO REQUESTED';
+        }
+
+        function disableApprovalButtons() {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            });
+        }
+    </script>
+</body>
+</html>
