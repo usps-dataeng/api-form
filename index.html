@@ -842,8 +842,8 @@
 			const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
 			data.selectedTier = selectedTier;
 			
-			// Get Business Criticality from the form (this is the correct way)
-			const criticalityElement = document.querySelector('input[name="businessCriticality"]:checked');
+			// Get Business Criticality from the form (corrected)
+			const criticalityElement = document.getElementById('businessCriticality');
 			const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
 			
 			// Determine if critical based on the actual Business Criticality field
