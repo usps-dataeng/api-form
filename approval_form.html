@@ -359,7 +359,7 @@ If you have questions about this rejection, please contact the approver directly
 
         // Helper functions
         async function getSharePointItem(itemId) {
-            const listUrl = `https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items(${itemId})`;
+            const listUrl = `https://usps365.sharepoint.com/sites/APIManagementTeam/_api/web/lists/getbytitle('API Requests')/items(${itemId})`;
             
             const response = await fetch(listUrl, {
                 headers: {
@@ -372,7 +372,7 @@ If you have questions about this rejection, please contact the approver directly
         }
 
         async function getRequestDigest() {
-            const response = await fetch("https://yoursite.sharepoint.com/sites/APIManagement/_api/contextinfo", {
+           const response = await fetch("https://usps365.sharepoint.com/sites/APIManagementTeam/_api/contextinfo", {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json;odata=verbose'
