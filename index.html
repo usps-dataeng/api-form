@@ -727,39 +727,41 @@
 
         // Show/hide conditional fields
         function toggleConditionalFields() {
-            // Show/hide organization other field
-            const orgOther = document.querySelector('input[name="organization"][value="Other"]');
-            const orgOtherField = document.getElementById('organizationOther');
-            if (orgOther && orgOther.checked) {
-                orgOtherField.style.display = 'block';
-                orgOtherField.required = true;
-            } else {
-                orgOtherField.style.display = 'none';
-                orgOtherField.required = false;
-            }
-
-            // Show/hide workload other field
-            const workloadSelect = document.getElementById('workload');
-            const workloadOtherField = document.getElementById('workloadOther');
-            if (workloadSelect.value === 'other') {
-                workloadOtherField.style.display = 'block';
-                workloadOtherField.required = true;
-            } else {
-                workloadOtherField.style.display = 'none';
-                workloadOtherField.required = false;
-            }
-
-            // Update end date based on ongoing checkbox
-            const ongoingCheckbox = document.getElementById('ongoingProject');
-            const endDateField = document.getElementById('endDate');
-            if (ongoingCheckbox.checked) {
-                endDateField.disabled = true;
-                endDateField.value = '';
-            } else {
-                endDateField.disabled = false;
-            }
-        }
-
+	    // Show/hide organization other field
+	    const orgOther = document.querySelector('input[name="organization"][value="Other"]');
+	    const orgOtherField = document.getElementById('organizationOther');
+	    if (orgOther && orgOther.checked) {
+	        orgOtherField.style.display = 'block';
+	        orgOtherField.required = true;
+	    } else {
+	        orgOtherField.style.display = 'none';
+	        orgOtherField.required = false;
+	    }
+	
+	    // Show/hide workload other field
+	    const workloadSelect = document.getElementById('workload');
+	    const workloadOtherField = document.getElementById('workloadOther');
+	    if (workloadSelect.value === 'other') {
+	        workloadOtherField.style.display = 'block';
+	        workloadOtherField.required = true;
+	        // Always attach the event listener (safe to attach multiple times)
+	        workloadOtherField.removeEventListener('input', updateNamingPreview); // Remove if already attached
+	        workloadOtherField.addEventListener('input', updateNamingPreview);
+	    } else {
+	        workloadOtherField.style.display = 'none';
+	        workloadOtherField.required = false;
+	    }
+	
+	    // Update end date based on ongoing checkbox
+	    const ongoingCheckbox = document.getElementById('ongoingProject');
+	    const endDateField = document.getElementById('endDate');
+	    if (ongoingCheckbox.checked) {
+	        endDateField.disabled = true;
+	        endDateField.value = '';
+	    } else {
+	        endDateField.disabled = false;
+	    }
+	}
         // Form validation
         function validateForm() {
             const form = document.getElementById('apiRequestForm');
