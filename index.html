@@ -1005,56 +1005,65 @@
 	}
 
         // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load draft if exists
-            loadDraft();
-            
-            // Add event listeners for auto-updates
-            document.getElementById('applicationAcronym').addEventListener('input', function() {
-                updateNamingPreview();
-                updateAutoFields();
-            });
-            
-            document.getElementById('environment').addEventListener('change', function() {
-                updateNamingPreview();
-                updateAutoFields();
-            });
-            
-            document.getElementById('workload').addEventListener('change', function() {
-                updateNamingPreview();
-                toggleConditionalFields();
-            });
-            
-            document.getElementById('instance').addEventListener('input', updateNamingPreview);
-            
-            document.getElementById('projectLeadName').addEventListener('input', updateAutoFields);
-            
-            // Organization radio buttons
-			document.querySelectorAll('input[name="organization"]').forEach(radio => {
-				radio.addEventListener('change', function() {
-					updateAutoFields();
-					toggleConditionalFields();
-					updateOrgSpecificTags(); // ADD THIS LINE
-				});
-			});
-            
-            // Tier radio buttons
-            document.querySelectorAll('input[name="selectedTier"]').forEach(radio => {
-                radio.addEventListener('change', updateAutoFields);
-            });
-            
-            // Ongoing project checkbox
-            document.getElementById('ongoingProject').addEventListener('change', toggleConditionalFields);
-            
-            // Auto-save draft every 2 minutes
-            setInterval(function() {
-                const formData = new FormData(document.getElementById('apiRequestForm'));
-                const data = Object.fromEntries(formData.entries());
-                if (Object.keys(data).some(key => data[key])) {
-                    localStorage.setItem('apiRequestDraft', JSON.stringify(data));
-                }
-            }, 120000); // 2 minutes
-        });
+
+	document.addEventListener('DOMContentLoaded', function() {
+	
+	    // Load draft if exists
+	    loadDraft();
+	
+	    // Add event listeners for auto-updates
+	    document.getElementById('applicationAcronym').addEventListener('input', function() {
+	        updateNamingPreview();
+	        updateAutoFields();
+	    });
+	
+	    document.getElementById('environment').addEventListener('change', function() {
+	        updateNamingPreview();
+	        updateAutoFields();
+	    });
+	
+	    document.getElementById('workload').addEventListener('change', function() {
+	        updateNamingPreview();
+	        toggleConditionalFields();
+	    });
+	
+	    // NEW: Listen for changes to workloadOther (when "other" is selected)
+	    document.getElementById('workloadOther').addEventListener('input', updateNamingPreview);
+	
+	    document.getElementById('instance').addEventListener('input', updateNamingPreview);
+	
+	    // NEW: Listen for changes to sequenceNumber (if it can be changed)
+	    document.getElementById('sequenceNumber').addEventListener('input', updateNamingPreview);
+	
+	    document.getElementById('projectLeadName').addEventListener('input', updateAutoFields);
+	
+	    // Organization radio buttons
+	    document.querySelectorAll('input[name="organization"]').forEach(radio => {
+	        radio.addEventListener('change', function() {
+	            updateAutoFields();
+	            toggleConditionalFields();
+	            updateOrgSpecificTags(); // ADD THIS LINE
+	        });
+	    });
+	
+	    // Tier radio buttons
+	    document.querySelectorAll('input[name="selectedTier"]').forEach(radio => {
+	        radio.addEventListener('change', updateAutoFields);
+	    });
+	
+	    // Ongoing project checkbox
+	    document.getElementById('ongoingProject').addEventListener('change', toggleConditionalFields);
+	
+	    // Auto-save draft every 2 minutes
+	    setInterval(function() {
+	        const formData = new FormData(document.getElementById('apiRequestForm'));
+	        const data = Object.fromEntries(formData.entries());
+	        if (Object.keys(data).some(key => data[key])) {
+	            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+	        }
+	    }, 120000); // 2 minutes
+	
+	});
     </script>
 </body>
 </html>
