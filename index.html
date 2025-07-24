@@ -1006,6 +1006,50 @@
 		return '';
 	}
 
+	function loadDraft() {
+	    const draft = localStorage.getItem('apiRequestDraft');
+	    if (draft) {
+	        const data = JSON.parse(draft);
+	        // Populate form fields
+	        Object.keys(data).forEach(key => {
+	            const field = document.querySelector(`[name="${key}"]`);
+	            if (field) {
+	                if (field.type === 'radio') {
+	                    const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
+	                    if (radio) radio.checked = true;
+	                } else if (field.type === 'checkbox') {
+	                    field.checked = data[key] === 'true';
+	                } else {
+	                    field.value = data[key];
+	                }
+	            }
+	        });
+	        // Update dependent fields
+	        updateAutoFields();
+	        updateNamingPreview();
+	        toggleConditionalFields();
+	    }
+	}
+
+        // Reset form
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+                document.getElementById('apiRequestForm').reset();
+                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
+                
+                // Clear auto-populated fields
+                document.getElementById('tagEnv').value = '';
+                document.getElementById('tagAppAcronym').value = '';
+                document.getElementById('tagOwner').value = '';
+                document.getElementById('approverName').value = '';
+                document.getElementById('approverEmail').value = '';
+                document.getElementById('approverRole').value = '';
+                
+                // Clear validation errors
+                document.querySelectorAll('.validation-error').forEach(error => error.remove());
+            }
+        }
+
         // Event listeners
 
 	document.addEventListener('DOMContentLoaded', function() {
