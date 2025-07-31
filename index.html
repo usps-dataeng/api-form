@@ -181,6 +181,13 @@
             background-color: #f0f8ff;
             border-color: #0078d4;
         }
+        .debug-btn {
+            background-color: #ffc107;
+            color: #212529;
+            margin: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -336,6 +343,14 @@
                 
                 <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
                     <strong>CASI Naming Standard:</strong> &lt;AA&gt;-&lt;Env&gt;-&lt;WD&gt;-&lt;SN&gt;-apim-&lt;Inst&gt;
+                </div>
+
+                <!-- DEBUG BUTTONS (Remove after testing) -->
+                <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <strong>Debug Tools:</strong>
+                    <button type="button" class="btn debug-btn" onclick="testAutoFill()">Test Auto-fill</button>
+                    <button type="button" class="btn debug-btn" onclick="clearDraft()">Clear Draft</button>
+                    <button type="button" class="btn debug-btn" onclick="showDebugInfo()">Show Debug Info</button>
                 </div>
 
                 <div class="form-row">
@@ -606,6 +621,45 @@
             ]
         };
 
+        // DEBUG FUNCTIONS (Remove after testing)
+        function testAutoFill() {
+            console.log('🔧 Testing auto-fill functions...');
+            
+            // Fill in test data
+            document.getElementById('applicationAcronym').value = 'TEST';
+            document.getElementById('environment').value = 'dev';
+            document.getElementById('workload').value = 'api';
+            document.getElementById('instance').value = '01';
+            document.getElementById('projectLeadName').value = 'Test Manager';
+            
+            // Trigger auto-fill
+            updateNamingPreview();
+            updateAutoFields();
+            
+            console.log('✅ Auto-fill test complete');
+            console.log('Preview should show: TEST-dev-api-01-apim-01');
+        }
+
+        function clearDraft() {
+            localStorage.removeItem('apiRequestDraft');
+            console.log('🗑️ Draft cleared from localStorage');
+            alert('Draft cleared! Refresh page to see clean form.');
+        }
+
+        function showDebugInfo() {
+            console.log('🔍 Debug Information:');
+            console.log('updateNamingPreview function exists:', typeof updateNamingPreview);
+            console.log('updateAutoFields function exists:', typeof updateAutoFields);
+            console.log('loadDraft function exists:', typeof loadDraft);
+            console.log('saveDraft function exists:', typeof saveDraft);
+            
+            const preview = document.getElementById('namingPreview').textContent;
+            console.log('Current naming preview:', preview);
+            
+            const draft = localStorage.getItem('apiRequestDraft');
+            console.log('Draft in localStorage:', draft ? 'EXISTS' : 'NOT FOUND');
+        }
+
         // Function to update organization-specific tags
         function updateOrgSpecificTags() {
             const selectedOrg = document.querySelector('input[name="organization"]:checked');
@@ -649,6 +703,8 @@
 		
         // Auto-populate naming preview
         function updateNamingPreview() {
+            console.log('🔄 Updating naming preview...');
+            
             const aa = document.getElementById('applicationAcronym').value.toUpperCase();
             const env = document.getElementById('environment').value;
             const wd = document.getElementById('workload').value === 'other' ? 
@@ -657,16 +713,22 @@
             const sn = document.getElementById('sequenceNumber').value;
             const inst = document.getElementById('instance').value.toUpperCase();
             
+            console.log('Values:', {aa, env, wd, sn, inst});
+            
             if (aa && env && wd && sn && inst) {
                 const generatedName = `${aa}-${env}-${wd}-${sn}-apim-${inst}`;
                 document.getElementById('namingPreview').textContent = generatedName;
+                console.log('✅ Generated name:', generatedName);
             } else {
                 document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
+                console.log('⚠️ Missing fields for naming preview');
             }
         }
 
         // Auto-populate related fields
         function updateAutoFields() {
+            console.log('🔄 Updating auto fields...');
+            
             // Update ENV tag from environment selection
             const env = document.getElementById('environment').value;
             document.getElementById('tagEnv').value = env;
@@ -681,6 +743,8 @@
             
             // Update approver based on organization and tier
             updateApprover();
+            
+            console.log('✅ Auto fields updated');
         }
 
         // Update approver information based on organization and tier
@@ -727,41 +791,42 @@
 
         // Show/hide conditional fields
         function toggleConditionalFields() {
-	    // Show/hide organization other field
-	    const orgOther = document.querySelector('input[name="organization"][value="Other"]');
-	    const orgOtherField = document.getElementById('organizationOther');
-	    if (orgOther && orgOther.checked) {
-	        orgOtherField.style.display = 'block';
-	        orgOtherField.required = true;
-	    } else {
-	        orgOtherField.style.display = 'none';
-	        orgOtherField.required = false;
-	    }
-	
-	    // Show/hide workload other field
-	    const workloadSelect = document.getElementById('workload');
-	    const workloadOtherField = document.getElementById('workloadOther');
-	    if (workloadSelect.value === 'other') {
-	        workloadOtherField.style.display = 'block';
-	        workloadOtherField.required = true;
-	        // Always attach the event listener (safe to attach multiple times)
-	        workloadOtherField.removeEventListener('input', updateNamingPreview); // Remove if already attached
-	        workloadOtherField.addEventListener('input', updateNamingPreview);
-	    } else {
-	        workloadOtherField.style.display = 'none';
-	        workloadOtherField.required = false;
-	    }
-	
-	    // Update end date based on ongoing checkbox
-	    const ongoingCheckbox = document.getElementById('ongoingProject');
-	    const endDateField = document.getElementById('endDate');
-	    if (ongoingCheckbox.checked) {
-	        endDateField.disabled = true;
-	        endDateField.value = '';
-	    } else {
-	        endDateField.disabled = false;
-	    }
-	}
+            // Show/hide organization other field
+            const orgOther = document.querySelector('input[name="organization"][value="Other"]');
+            const orgOtherField = document.getElementById('organizationOther');
+            if (orgOther && orgOther.checked) {
+                orgOtherField.style.display = 'block';
+                orgOtherField.required = true;
+            } else {
+                orgOtherField.style.display = 'none';
+                orgOtherField.required = false;
+            }
+
+            // Show/hide workload other field
+            const workloadSelect = document.getElementById('workload');
+            const workloadOtherField = document.getElementById('workloadOther');
+            if (workloadSelect.value === 'other') {
+                workloadOtherField.style.display = 'block';
+                workloadOtherField.required = true;
+                // Add event listener for workloadOther input
+                workloadOtherField.removeEventListener('input', updateNamingPreview);
+                workloadOtherField.addEventListener('input', updateNamingPreview);
+            } else {
+                workloadOtherField.style.display = 'none';
+                workloadOtherField.required = false;
+            }
+
+            // Update end date based on ongoing checkbox
+            const ongoingCheckbox = document.getElementById('ongoingProject');
+            const endDateField = document.getElementById('endDate');
+            if (ongoingCheckbox.checked) {
+                endDateField.disabled = true;
+                endDateField.value = '';
+            } else {
+                endDateField.disabled = false;
+            }
+        }
+
         // Form validation
         function validateForm() {
             const form = document.getElementById('apiRequestForm');
@@ -822,226 +887,50 @@
             return isValid;
         }
 
-        // Submit form
-	function submitForm() {
-		if (!validateForm()) {
-			alert('Please correct the errors in the form before submitting.');
-			return;
-		}
-		
-		// Collect form data
-		const formData = new FormData(document.getElementById('apiRequestForm'));
-		const data = Object.fromEntries(formData.entries());
-		
-		// Generate unique request ID
-		data.requestId = 'REQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-		data.submissionTimestamp = new Date().toISOString();
-		data.generatedApiName = document.getElementById('namingPreview').textContent;
-		
-		// Get tier with better detection
-		const tierElement = document.querySelector('input[name="tier"]:checked') || 
-						   document.querySelector('input[name="selectedTier"]:checked');
-		const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
-		data.selectedTier = selectedTier;
-		
-		// Get Business Criticality from the form (corrected)
-		const criticalityElement = document.getElementById('businessCriticality');
-		const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
-		
-		// Determine if critical based on the actual Business Criticality field
-		const isCritical = businessCriticality === 'Critical';
-		
-		// Save to SharePoint/Database first
-		saveToSharePoint(data).then(itemId => {
-			// Create approval URL with the SharePoint item ID
-			const approvalUrl = `https://usps-dataeng.github.io/api-form/approval_form.html?requestId=${data.requestId}&itemId=${itemId}`;
-			
-			// Updated email subject with requestor name
-			const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
-			
-			// Updated email body with actual business criticality
-			const emailBody = `API Management Request - ${isCritical ? 'CRITICAL' : businessCriticality.toUpperCase()} Priority
-
-	Request ID: ${data.requestId}
-	API Name: ${data.generatedApiName}
-	Requestor: ${data.requestorName}
-	Tier: ${selectedTier}
-	Business Criticality: ${businessCriticality}${isCritical ? ' - Requires immediate attention' : ''}
-
-	Please follow the link below to review the full request details and approve or reject this request:
-
-	${approvalUrl}
-
-	This link will take you to the complete request form with approval/rejection options.
-	`;
-			
-			// Automatically send email using EmailJS or similar service
-			sendEmailAutomatically({
-				to: data.approverEmail,
-				subject: emailSubject,
-				body: emailBody,
-				requestId: data.requestId
-			});
-			
-			alert(`Request submitted successfully!\nRequest ID: ${data.requestId}\nApproval email sent automatically to ${data.approverEmail}`);
-			
-		}).catch(error => {
-			console.error('Error submitting request:', error);
-			alert('Error submitting request. Please try again.');
-		});
-	}
-
-	// Save to SharePoint function
-	async function saveToSharePoint(data) {
-		// This would use SharePoint REST API or Microsoft Graph API
-		const listUrl = "https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items";
-		
-		const requestBody = {
-			Title: data.generatedApiName,
-			RequestId: data.requestId,
-			RequestorName: data.requestorName,
-			RequestorEmail: data.requestorEmail,
-			BusinessJustification: data.businessJustification,
-			SelectedTier: data.selectedTier,
-			EstimatedMonthlyCost: parseFloat(data.estimatedMonthlyCost || 0),
-			Status: 'Pending Approval',
-			SubmissionDate: data.submissionTimestamp,
-			ApproverName: data.approverName,
-			ApproverEmail: data.approverEmail,
-			IsCritical: data.selectedTier === 'Enterprise' || data.selectedTier === 'Premium',
-			// Store complete form data as JSON
-			FormDataJSON: JSON.stringify(data)
-		};
-		
-		try {
-			const response = await fetch(listUrl, {
-				method: 'POST',
-				headers: {
-					'Accept': 'application/json;odata=verbose',
-					'Content-Type': 'application/json;odata=verbose',
-					'X-RequestDigest': await getRequestDigest()
-				},
-				body: JSON.stringify(requestBody)
-			});
-			
-			const result = await response.json();
-			return result.d.Id; // Return SharePoint item ID
-		} catch (error) {
-			console.error('Error saving to SharePoint:', error);
-			// For now, return a mock ID for testing
-			return Date.now();
-		}
-	}
-
-	// Automatic email sending function
-	async function sendEmailAutomatically(emailData) {
-		try {
-			// Option 1: Using EmailJS (requires setup)
-			if (typeof emailjs !== 'undefined') {
-				await emailjs.send('your_service_id', 'your_template_id', {
-					to_email: emailData.to,
-					subject: emailData.subject,
-					message: emailData.body,
-					request_id: emailData.requestId
-				});
-			} else {
-				// Option 2: Using Microsoft Graph API (for Office 365)
-				await sendViaGraphAPI(emailData);
-			}
-			
-			console.log('Email sent automatically to:', emailData.to);
-		} catch (error) {
-			console.error('Error sending automatic email:', error);
-			// Fallback to mailto if automatic sending fails
-			const mailtoLink = `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
-			window.location.href = mailtoLink;
-		}
-	}
-
-	// Microsoft Graph API email sending (for Office 365 environments)
-	async function sendViaGraphAPI(emailData) {
-		const graphEndpoint = 'https://graph.microsoft.com/v1.0/me/sendMail';
-		
-		const emailPayload = {
-			message: {
-				subject: emailData.subject,
-				body: {
-					contentType: 'Text',
-					content: emailData.body
-				},
-				toRecipients: [{
-					emailAddress: {
-						address: emailData.to
-					}
-				}]
-			}
-		};
-		
-		// This requires proper authentication token
-		const response = await fetch(graphEndpoint, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${await getAccessToken()}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(emailPayload)
-		});
-		
-		if (!response.ok) {
-			throw new Error('Failed to send email via Graph API');
-		}
-	}
-
-	// Helper function to get SharePoint request digest
-	async function getRequestDigest() {
-		// This would get the request digest from SharePoint
-		// For now, return empty string (you'll need to implement this)
-		return '';
-	}
-
-	// Helper function to get access token for Graph API
-	async function getAccessToken() {
-		// This would get the access token for Microsoft Graph
-		// Implementation depends on your authentication setup
-		return '';
-	}
-
-	// Save as draft
+        // Save draft
         function saveDraft() {
+            console.log('💾 Saving draft...');
             const formData = new FormData(document.getElementById('apiRequestForm'));
             const data = Object.fromEntries(formData.entries());
-            
-            // Save to localStorage for now (in real app, save to backend)
             localStorage.setItem('apiRequestDraft', JSON.stringify(data));
-            
+            console.log('✅ Draft saved');
             alert('Draft saved successfully!');
         }
-	    
-	// Load draft
-	function loadDraft() {
-	    const draft = localStorage.getItem('apiRequestDraft');
-	    if (draft) {
-	        const data = JSON.parse(draft);
-	        // Populate form fields
-	        Object.keys(data).forEach(key => {
-	            const field = document.querySelector(`[name="${key}"]`);
-	            if (field) {
-	                if (field.type === 'radio') {
-	                    const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
-	                    if (radio) radio.checked = true;
-	                } else if (field.type === 'checkbox') {
-	                    field.checked = data[key] === 'true';
-	                } else {
-	                    field.value = data[key];
-	                }
-	            }
-	        });
-	        // Update dependent fields
-	        updateAutoFields();
-	        updateNamingPreview();
-	        toggleConditionalFields();
-	    }
-	}
+
+        // Load draft
+        function loadDraft() {
+            console.log('📂 Loading draft...');
+            const draft = localStorage.getItem('apiRequestDraft');
+            if (draft) {
+                const data = JSON.parse(draft);
+                console.log('Draft data found:', data);
+                
+                // Populate form fields
+                Object.keys(data).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'radio') {
+                            const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
+                            if (radio) radio.checked = true;
+                        } else if (field.type === 'checkbox') {
+                            field.checked = data[key] === 'true';
+                        } else {
+                            field.value = data[key];
+                        }
+                    }
+                });
+                
+                // Update dependent fields
+                updateAutoFields();
+                updateNamingPreview();
+                toggleConditionalFields();
+                updateOrgSpecificTags();
+                
+                console.log('✅ Draft loaded');
+            } else {
+                console.log('ℹ️ No draft found');
+            }
+        }
 
         // Reset form
         function resetForm() {
@@ -1057,71 +946,151 @@
                 document.getElementById('approverEmail').value = '';
                 document.getElementById('approverRole').value = '';
                 
+                // Hide organization-specific tags
+                document.getElementById('orgSpecificTags').style.display = 'none';
+                
                 // Clear validation errors
                 document.querySelectorAll('.validation-error').forEach(error => error.remove());
+                
+                // Clear draft
+                localStorage.removeItem('apiRequestDraft');
+                
+                console.log('🔄 Form reset');
             }
         }
 
-        // Event listeners
+        // Submit form
+		function submitForm() {
+			if (!validateForm()) {
+				alert('Please correct the errors in the form before submitting.');
+				return;
+			}
+			
+			// Collect form data
+			const formData = new FormData(document.getElementById('apiRequestForm'));
+			const data = Object.fromEntries(formData.entries());
+			
+			// Generate unique request ID
+			data.requestId = 'REQ-' + Date.now();
+			data.submissionTimestamp = new Date().toISOString();
+			data.generatedApiName = document.getElementById('namingPreview').textContent;
+			
+			// Get tier with better detection
+			const tierElement = document.querySelector('input[name="tier"]:checked') || 
+							   document.querySelector('input[name="selectedTier"]:checked');
+			const selectedTier = tierElement ? tierElement.value : data.selectedTier || 'N/A';
+			data.selectedTier = selectedTier;
+			
+			// Get Business Criticality from the form (corrected)
+			const criticalityElement = document.getElementById('businessCriticality');
+			const businessCriticality = criticalityElement ? criticalityElement.value : 'Not specified';
+			
+			// Determine if critical based on the actual Business Criticality field
+			const isCritical = businessCriticality === 'Critical';
+			
+			// Updated email subject with requestor name
+			const emailSubject = `${data.requestorName || 'Unknown User'} is requesting API creation`;
+			
+			// Updated email body with actual business criticality
+			const emailBody = `API Management Request - ${isCritical ? 'CRITICAL' : businessCriticality.toUpperCase()} Priority
 
-	document.addEventListener('DOMContentLoaded', function() {
-	
-	    // Load draft if exists
-	    loadDraft();
-	
-	    // Add event listeners for auto-updates
-	    document.getElementById('applicationAcronym').addEventListener('input', function() {
-	        updateNamingPreview();
-	        updateAutoFields();
-	    });
-	
-	    document.getElementById('environment').addEventListener('change', function() {
-	        updateNamingPreview();
-	        updateAutoFields();
-	    });
-	
-	    document.getElementById('workload').addEventListener('change', function() {
-	        updateNamingPreview();
-	        toggleConditionalFields();
-	    });
-	
-	    // NEW: Listen for changes to workloadOther (when "other" is selected)
-	    document.getElementById('workloadOther').addEventListener('input', updateNamingPreview);
-	
-	    document.getElementById('instance').addEventListener('input', updateNamingPreview);
-	
-	    // NEW: Listen for changes to sequenceNumber (if it can be changed)
-	    document.getElementById('sequenceNumber').addEventListener('input', updateNamingPreview);
-	
-	    document.getElementById('projectLeadName').addEventListener('input', updateAutoFields);
-	
-	    // Organization radio buttons
-	    document.querySelectorAll('input[name="organization"]').forEach(radio => {
-	        radio.addEventListener('change', function() {
-	            updateAutoFields();
-	            toggleConditionalFields();
-	            updateOrgSpecificTags(); // ADD THIS LINE
-	        });
-	    });
-	
-	    // Tier radio buttons
-	    document.querySelectorAll('input[name="selectedTier"]').forEach(radio => {
-	        radio.addEventListener('change', updateAutoFields);
-	    });
-	
-	    // Ongoing project checkbox
-	    document.getElementById('ongoingProject').addEventListener('change', toggleConditionalFields);
-	
-	    // Auto-save draft every 2 minutes
-	    setInterval(function() {
-	        const formData = new FormData(document.getElementById('apiRequestForm'));
-	        const data = Object.fromEntries(formData.entries());
-	        if (Object.keys(data).some(key => data[key])) {
-	            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
-	        }
-	    }, 120000); // 2 minutes
-	
-	});
+Request ID: ${data.requestId}
+API Name: ${data.generatedApiName}
+Requestor: ${data.requestorName}
+Tier: ${selectedTier}
+Business Criticality: ${businessCriticality}${isCritical ? ' - Requires immediate attention' : ''}
+
+Business Justification:
+${data.businessJustification}
+
+Expected Benefits:
+${data.benefitsImpacts}
+
+Technical Details:
+- Application Acronym: ${data.applicationAcronym}
+- Environment: ${data.environment}
+- Workload: ${data.workload}
+- Monthly Cost Estimate: $${data.estimatedMonthlyCost}
+
+Contact Information:
+- Project Lead: ${data.projectLeadName} (${data.projectLeadEmail})
+- Engineer: ${data.engineerName} (${data.engineerEmail})
+- Department: ${data.requestorDepartment}
+
+${data.additionalRequirements ? 'Special Requirements:\n' + data.additionalRequirements : ''}
+
+This request has been digitally signed by: ${data.digitalSignature}
+Submitted on: ${new Date().toLocaleString()}
+			`;
+			
+			// Create mailto link
+			const mailtoLink = `mailto:${data.approverEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+			
+			console.log('📧 Opening email client...');
+			window.location.href = mailtoLink;
+			
+			alert(`Request submitted successfully!\nRequest ID: ${data.requestId}\nEmail client opened to send to ${data.approverEmail}`);
+			
+			// Clear the form and draft after successful submission
+			resetForm();
+		}
+
+        // Event listeners
+		document.addEventListener('DOMContentLoaded', function() {
+			console.log('🚀 Form initialized');
+
+			// Load draft if exists
+			loadDraft();
+
+			// Add event listeners for auto-updates
+			document.getElementById('applicationAcronym').addEventListener('input', function() {
+				updateNamingPreview();
+				updateAutoFields();
+			});
+
+			document.getElementById('environment').addEventListener('change', function() {
+				updateNamingPreview();
+				updateAutoFields();
+			});
+
+			document.getElementById('workload').addEventListener('change', function() {
+				updateNamingPreview();
+				toggleConditionalFields();
+			});
+
+			document.getElementById('instance').addEventListener('input', updateNamingPreview);
+			document.getElementById('sequenceNumber').addEventListener('input', updateNamingPreview);
+			document.getElementById('projectLeadName').addEventListener('input', updateAutoFields);
+
+			// Organization radio buttons
+			document.querySelectorAll('input[name="organization"]').forEach(radio => {
+				radio.addEventListener('change', function() {
+					updateAutoFields();
+					toggleConditionalFields();
+					updateOrgSpecificTags();
+				});
+			});
+
+			// Tier radio buttons
+			document.querySelectorAll('input[name="selectedTier"]').forEach(radio => {
+				radio.addEventListener('change', updateAutoFields);
+			});
+
+			// Ongoing project checkbox
+			document.getElementById('ongoingProject').addEventListener('change', toggleConditionalFields);
+
+			// Auto-save draft every 2 minutes
+			setInterval(function() {
+				const formData = new FormData(document.getElementById('apiRequestForm'));
+				const data = Object.fromEntries(formData.entries());
+				if (Object.keys(data).some(key => data[key])) {
+					localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+					console.log('💾 Auto-saved draft');
+				}
+			}, 120000); // 2 minutes
+
+			console.log('✅ All event listeners attached');
+		});
     </script>
 </body>
 </html>
