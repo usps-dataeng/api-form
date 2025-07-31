@@ -1006,6 +1006,18 @@
 		return '';
 	}
 
+	// Save as draft
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('apiRequestForm'));
+            const data = Object.fromEntries(formData.entries());
+            
+            // Save to localStorage for now (in real app, save to backend)
+            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+            
+            alert('Draft saved successfully!');
+        }
+	    
+	// Load draft
 	function loadDraft() {
 	    const draft = localStorage.getItem('apiRequestDraft');
 	    if (draft) {
