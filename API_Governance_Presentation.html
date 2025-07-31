@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Governance & Cost Control Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            min-height: 100vh;
+            padding: 60px 80px;
+            display: none;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            page-break-after: always;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide h1 {
+            color: #1e3c72;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 20px;
+        }
+
+        .slide h2 {
+            color: #2a5298;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            border-left: 5px solid #1e3c72;
+            padding-left: 15px;
+        }
+
+        .slide h3 {
+            color: #1e3c72;
+            font-size: 1.5em;
+            margin: 20px 0 15px 0;
+        }
+
+        .slide p {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .slide ul {
+            font-size: 1.2em;
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .slide li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8e6cf 0%, #dcedc8 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #4caf50;
+        }
+
+        .problem {
+            background: linear-gradient(120deg, #ffcdd2 0%, #f8bbd9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #f44336;
+        }
+
+        .solution {
+            background: linear-gradient(120deg, #bbdefb 0%, #c5cae9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #2196f3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: #2a5298;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(30, 60, 114, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .flow-diagram {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px dashed #1e3c72;
+        }
+
+        .metric-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .metric-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .status-complete {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .status-progress {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .status-next {
+            color: #2196f3;
+            font-weight: bold;
+        }
+
+        @media print {
+            .slide {
+                display: block !important;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .navigation, .slide-counter {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide active">
+    <h1>API Service Cost Control & Governance Framework</h1>
+    <div style="text-align: center; margin-top: 100px;">
+        <h2>Automated Workflow for Azure API Management</h2>
+        <p style="font-size: 1.5em; margin: 50px 0;"><strong>CDAO Cost Control Initiative</strong></p>
+        <p style="font-size: 1.3em;">Process Owners: Casey Smith & Grace Lin</p>
+        <p style="font-size: 1.3em;">Date: July 30, 2025</p>
+    </div>
+</div>
+
+<!-- Slide 2: Executive Summary -->
+<div class="slide">
+    <h2>Executive Summary</h2>
+    <div class="highlight">
+        <h3>Transforming API Cost Management</h3>
+        <ul>
+            <li><strong>Problem:</strong> $120,000+ annual cloud spending with no real-time visibility</li>
+            <li><strong>Solution:</strong> Automated governance workflow with Power Platform integration</li>
+            <li><strong>Impact:</strong> 100% compliance, real-time monitoring, proactive cost control</li>
+            <li><strong>Status:</strong> Ready for deployment pending final IT approval</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 3: Current Pain Points -->
+<div class="slide">
+    <h2>Current Pain Points</h2>
+    <div class="problem">
+        <h3>What We're Solving Today</h3>
+        <ul>
+            <li>❌ Manual cost tracking (20+ hours/month)</li>
+            <li>❌ Budget surprises from untracked API deployments</li>
+            <li>❌ 60% non-compliance with approval processes</li>
+            <li>❌ No real-time cost visibility across teams</li>
+            <li>❌ Manual email chains for approvals (3-7 day delays)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 4: Proposed Solution -->
+<div class="slide">
+    <h2>Proposed Solution Overview</h2>
+    <div class="solution">
+        <h3>Automated End-to-End Governance</h3>
+        <ul>
+            <li>✅ Web-based request submission with built-in validations</li>
+            <li>✅ Automatic approval routing based on cost thresholds</li>
+            <li>✅ Real-time SharePoint data capture and Power BI dashboards</li>
+            <li>✅ Proactive budget alerts and compliance monitoring</li>
+            <li>✅ Complete audit trail for all API deployments</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 5: Process Flow -->
+<div class="slide">
+    <h2>Process Flow Diagram</h2>
+    <div class="flow-diagram">
+        <h3>Automated Workflow Process</h3>
+        <p><strong>1. Request Submission</strong> → <strong>2. Cost Threshold Check</strong> → <strong>3. Approval Routing</strong></p>
+        <p>↓</p>
+        <p><strong>4. Power Automate HTTP Trigger</strong> → <strong>5. SharePoint Integration</strong> → <strong>6. Power BI Updates</strong></p>
+        <p>↓</p>
+        <p><strong>7. Real-time Monitoring</strong> → <strong>8. Budget Alerts</strong> → <strong>9. Executive Reporting</strong></p>
+    </div>
+    <div class="highlight">
+        <h3>Key Automation Points:</h3>
+        <ul>
+            <li>Cost threshold-based approval routing</li>
+            <li>HTTP trigger captures approved requests</li>
+            <li>SharePoint integration for data storage</li>
+            <li>Real-time Power BI dashboard updates</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 6: Approval Matrix -->
+<div class="slide">
+    <h2>Approval Workflow Matrix</h2>
+    <h3>Streamlined Decision Process</h3>
+    <table>
+        <tr>
+            <th>Cost Range</th>
+            <th>Required Approvals</th>
+            <th>Timeline</th>
+            <th>Documentation</th>
+        </tr>
+        <tr>
+            <td>Under $300</td>
+            <td>Team Lead</td>
+            <td>Same day</td>
+            <td>Business case + cost estimate</td>
+        </tr>
+        <tr>
+            <td>$300-$1,000</td>
+            <td>Team Lead + Cost Center Owner</td>
+            <td>1-2 days</td>
+            <td>Above + chargeback plan</td>
+        </tr>
+        <tr>
+            <td>Over $1,000</td>
+            <td>Team Lead + Cost Center + Finance + Leadership</td>
+            <td>3-5 days</td>
+            <td>Above + quarterly review plan</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Slide 7: Technology Architecture -->
+<div class="slide">
+    <h2>Technology Architecture</h2>
+    <div class="solution">
+        <h3>Power Platform Integration</h3>
+        <p><strong>Components:</strong></p>
+        <ul>
+            <li><strong>Power Automate:</strong> HTTP triggers and workflow automation</li>
+            <li><strong>SharePoint:</strong> Centralized request tracking and data storage</li>
+            <li><strong>Power BI:</strong> Real-time dashboards and executive reporting</li>
+            <li><strong>Azure Integration:</strong> Cost monitoring and resource tagging</li>
+        </ul>
+        <p><strong>Data Flow:</strong> Web Form → Power Automate → SharePoint → Power BI → Stakeholder Alerts</p>
+    </div>
+</div>
+
+<!-- Slide 8: Power BI Dashboard 1 -->
+<div class="slide">
+    <h2>Power BI Dashboard Overview</h2>
+    <div class="highlight">
+        <h3>Real-Time Cost & Compliance Monitoring</h3>
+        <h3>Page 1: API Overview</h3>
+        <ul>
+            <li>Total active APIs across IV, SAL, EDL</li>
+            <li>Cost breakdown by organization</li>
+            <li>Complete API inventory with status</li>
+        </ul>
+        
+        <h3>Page 2: Cost Management</h3>
+        <ul>
+            <li>Budget vs actual spending</li>
+            <li>Cost trends and projections</li>
+            <li>High-cost API identification</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 9: Power BI Dashboard 2 -->
+<div class="slide">
+    <h2>Power BI Dashboard (Continued)</h2>
+    <div class="highlight">
+        <h3>Compliance & Alert Management</h3>
+        <h3>Page 3: Compliance Dashboard</h3>
+        <ul>
+            <li>Real-time compliance rate tracking</li>
+            <li>Non-compliant API identification</li>
+            <li>Approval status monitoring</li>
+        </ul>
+        
+        <h3>Page 4: Alerts & Actions</h3>
+        <ul>
+            <li>Budget threshold alerts</li>
+            <li>API expiration warnings</li>
+            <li>Critical action items for immediate attention</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 10: Financial Impact -->
+<div class="slide">
+    <h2>Financial Impact</h2>
+    <h3>Quantified Business Benefits</h3>
+    <div style="text-align: center; margin: 30px 0;">
+        <div class="metric-box">
+            <span class="metric-number">$120,000+</span>
+            Annual Savings
+        </div>
+        <div class="metric-box">
+            <span class="metric-number">75+</span>
+            Hours/Year Saved
+        </div>
+        <div class="metric-box">
+            <span class="metric-number">80%</span>
+            Process Efficiency Gain
+        </div>
+    </div>
+    <div class="highlight">
+        <h3>Cost Savings Breakdown:</h3>
+        <ul>
+            <li>$120,000+ annual savings through improved cost control</li>
+            <li>$24,000+ saved in manual administrative overhead</li>
+            <li>$30,000+ prevented through early anomaly detection</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 11: Implementation Status -->
+<div class="slide">
+    <h2>Implementation Status</h2>
+    <h3>Current Progress & Next Steps</h3>
+    <div class="highlight">
+        <h3><span class="status-complete">✅ Completed:</span></h3>
+        <ul>
+            <li>Comprehensive governance framework designed</li>
+            <li>Power BI dashboard built and tested</li>
+            <li>SharePoint integration configured</li>
+            <li>Process documentation finalized</li>
+        </ul>
+    </div>
+    <div class="solution">
+        <h3><span class="status-progress">🔄 In Progress:</span></h3>
+        <ul>
+            <li>Awaiting Power Platform custom environment approval</li>
+            <li>Final HTTP connector DLP policy configuration</li>
+        </ul>
+    </div>
+    <div class="problem">
+        <h3><span class="status-next">📅 Next Steps:</span></h3>
+        <ul>
+            <li>Deploy workflow upon IT approval</li>
+            <li>Team training rollout (IV, UAP-SAL, EDL)</li>
+            <li>Monthly governance review establishment</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 12: Success Metrics -->
+<div class="slide">
+    <h2>Success Metrics</h2>
+    <h3>How We'll Measure Impact</h3>
+    <table>
+        <tr>
+            <th>Category</th>
+            <th>Metrics</th>
+            <th>Target</th>
+        </tr>
+        <tr>
+            <td>Financial</td>
+            <td>Monthly API cost vs budget variance</td>
+            <td>&lt; 5% variance</td>
+        </tr>
+        <tr>
+            <td>Operational</td>
+            <td>Approval processing time reduction</td>
+            <td>80% reduction</td>
+        </tr>
+        <tr>
+            <td>Governance</td>
+            <td>Compliance rate improvement</td>
+            <td>100% compliance</td>
+        </tr>
+        <tr>
+            <td>Risk</td>
+            <td>Unauthorized deployments</td>
+            <td>Zero incidents</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Slide 13: Next Steps & Timeline -->
+<div class="slide">
+    <h2>Next Steps & Timeline</h2>
+    <h3>Implementation Roadmap</h3>
+    <table>
+        <tr>
+            <th>Timeline</th>
+            <th>Activities</th>
+            <th>Deliverables</th>
+        </tr>
+        <tr>
+            <td>Week 1-2</td>
+            <td>Final IT approval and environment setup</td>
+            <td>Custom Power Platform environment</td>
+        </tr>
+        <tr>
+            <td>Week 3</td>
+            <td>Workflow deployment and initial testing</td>
+            <td>Functional automation workflow</td>
+        </tr>
+        <tr>
+            <td>Week 4</td>
+            <td>Team training and user onboarding</td>
+            <td>Trained teams across IV, SAL, EDL</td>
+        </tr>
+        <tr>
+            <td>Month 2</td>
+            <td>Full rollout and governance review establishment</td>
+            <td>Monthly governance process</td>
+        </tr>
+    </table>
+    <div class="problem">
+        <h3>Immediate Action Required:</h3>
+        <ul>
+            <li>Director endorsement for IT priority escalation</li>
+            <li>Approval for team training resource allocation</li>
+            <li>Authorization for monthly governance review meetings</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 14: Questions & Discussion -->
+<div class="slide">
+    <h2>Questions & Discussion</h2>
+    <div class="highlight">
+        <h3>Ready for Implementation</h3>
+        <ul>
+            <li>Complete governance framework designed and tested</li>
+            <li>Financial benefits quantified and validated</li>
+            <li>Technical solution proven with sample data</li>
+            <li>Team training materials prepared</li>
+        </ul>
+    </div>
+    <div class="solution">
+        <h3>Discussion Topics:</h3>
+        <ul>
+            <li>Timeline expectations and priorities</li>
+            <li>Resource allocation for implementation</li>
+            <li>Monthly governance review structure</li>
+            <li>Success metrics and reporting frequency</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="navigation">
+    <button class="nav-btn" onclick="previousSlide()">Previous</button>
+    <button class="nav-btn" onclick="nextSlide()">Next</button>
+</div>
+
+<div class="slide-counter">
+    <span id="currentSlide">1</span> / <span id="totalSlides">14</span>
+</div>
+
+<script>
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    
+    document.getElementById('totalSlides').textContent = totalSlides;
+    
+    function showSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[index].classList.add('active');
+        document.getElementById('currentSlide').textContent = index + 1;
+    }
+    
+    function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            showSlide(currentSlideIndex);
+        }
+    }
+    
+    function previousSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            showSlide(currentSlideIndex);
+        }
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowRight' || event.key === ' ') {
+            nextSlide();
+        } else if (event.key === 'ArrowLeft') {
+            previousSlide();
+        }
+    });
+</script>
+
+</body>
+</html>
