@@ -714,6 +714,7 @@
             const inst = document.getElementById('instance').value.toUpperCase();
             
             console.log('Values:', {aa, env, wd, sn, inst});
+            console.log('Individual values:', 'AA:', aa, 'ENV:', env, 'WD:', wd, 'SN:', sn, 'INST:', inst);
             
             if (aa && env && wd && sn && inst) {
                 const generatedName = `${aa}-${env}-${wd}-${sn}-apim-${inst}`;
@@ -887,77 +888,7 @@
             return isValid;
         }
 
-        // Save draft
-        function saveDraft() {
-            console.log('💾 Saving draft...');
-            const formData = new FormData(document.getElementById('apiRequestForm'));
-            const data = Object.fromEntries(formData.entries());
-            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
-            console.log('✅ Draft saved');
-            alert('Draft saved successfully!');
-        }
 
-        // Load draft
-        function loadDraft() {
-            console.log('📂 Loading draft...');
-            const draft = localStorage.getItem('apiRequestDraft');
-            if (draft) {
-                const data = JSON.parse(draft);
-                console.log('Draft data found:', data);
-                
-                // Populate form fields
-                Object.keys(data).forEach(key => {
-                    const field = document.querySelector(`[name="${key}"]`);
-                    if (field) {
-                        if (field.type === 'radio') {
-                            const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
-                            if (radio) radio.checked = true;
-                        } else if (field.type === 'checkbox') {
-                            field.checked = data[key] === 'true';
-                        } else {
-                            field.value = data[key];
-                        }
-                    }
-                });
-                
-                // Update dependent fields
-                updateAutoFields();
-                updateNamingPreview();
-                toggleConditionalFields();
-                updateOrgSpecificTags();
-                
-                console.log('✅ Draft loaded');
-            } else {
-                console.log('ℹ️ No draft found');
-            }
-        }
-
-        // Reset form
-        function resetForm() {
-            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
-                document.getElementById('apiRequestForm').reset();
-                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
-                
-                // Clear auto-populated fields
-                document.getElementById('tagEnv').value = '';
-                document.getElementById('tagAppAcronym').value = '';
-                document.getElementById('tagOwner').value = '';
-                document.getElementById('approverName').value = '';
-                document.getElementById('approverEmail').value = '';
-                document.getElementById('approverRole').value = '';
-                
-                // Hide organization-specific tags
-                document.getElementById('orgSpecificTags').style.display = 'none';
-                
-                // Clear validation errors
-                document.querySelectorAll('.validation-error').forEach(error => error.remove());
-                
-                // Clear draft
-                localStorage.removeItem('apiRequestDraft');
-                
-                console.log('🔄 Form reset');
-            }
-        }
 
         // Submit form
 		function submitForm() {
@@ -1035,6 +966,88 @@ Submitted on: ${new Date().toLocaleString()}
 			resetForm();
 		}
 
+        // Load draft function
+        function loadDraft() {
+            console.log('📂 Loading draft...');
+            const draft = localStorage.getItem('apiRequestDraft');
+            if (draft) {
+                const data = JSON.parse(draft);
+                console.log('Draft data found:', data);
+                
+                // Populate form fields
+                Object.keys(data).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'radio') {
+                            const radio = document.querySelector(`[name="${key}"][value="${data[key]}"]`);
+                            if (radio) radio.checked = true;
+                        } else if (field.type === 'checkbox') {
+                            field.checked = data[key] === 'true';
+                        } else {
+                            field.value = data[key];
+                        }
+                    }
+                });
+                
+                // Update dependent fields
+                updateAutoFields();
+                updateNamingPreview();
+                toggleConditionalFields();
+                updateOrgSpecificTags();
+                
+                console.log('✅ Draft loaded');
+            } else {
+                console.log('ℹ️ No draft found');
+            }
+        }
+
+        // Save draft function
+        function saveDraft() {
+            console.log('💾 Saving draft...');
+            const formData = new FormData(document.getElementById('apiRequestForm'));
+            const data = Object.fromEntries(formData.entries());
+            
+            // Include radio button and checkbox values
+            document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+                data[radio.name] = radio.value;
+            });
+            
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                data[checkbox.name] = checkbox.value;
+            });
+            
+            localStorage.setItem('apiRequestDraft', JSON.stringify(data));
+            console.log('✅ Draft saved');
+            alert('Draft saved successfully!');
+        }
+
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+                document.getElementById('apiRequestForm').reset();
+                document.getElementById('namingPreview').textContent = '[Will auto-generate as you fill in the fields above]';
+                
+                // Clear auto-populated fields
+                document.getElementById('tagEnv').value = '';
+                document.getElementById('tagAppAcronym').value = '';
+                document.getElementById('tagOwner').value = '';
+                document.getElementById('approverName').value = '';
+                document.getElementById('approverEmail').value = '';
+                document.getElementById('approverRole').value = '';
+                
+                // Hide organization-specific tags
+                document.getElementById('orgSpecificTags').style.display = 'none';
+                
+                // Clear validation errors
+                document.querySelectorAll('.validation-error').forEach(error => error.remove());
+                
+                // Clear draft
+                localStorage.removeItem('apiRequestDraft');
+                
+                console.log('🔄 Form reset');
+            }
+        }
+
         // Event listeners
 		document.addEventListener('DOMContentLoaded', function() {
 			console.log('🚀 Form initialized');
@@ -1094,3 +1107,4 @@ Submitted on: ${new Date().toLocaleString()}
     </script>
 </body>
 </html>
+
