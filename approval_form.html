@@ -110,6 +110,23 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .loading-message {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -119,11 +136,19 @@
             <div id="requestStatus"></div>
         </div>
 
-        <div id="requestDetails" class="request-details">
+        <div id="loadingMessage" class="loading-message" style="display: none;">
+            Loading request details...
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;">
+            Error loading request details. Please try again.
+        </div>
+
+        <div id="requestDetails" class="request-details" style="display: none;">
             <!-- Request details will be populated here -->
         </div>
 
-        <div class="approval-section" id="approvalSection">
+        <div class="approval-section" id="approvalSection" style="display: none;">
             <h3>Approval Decision</h3>
             <div class="approval-buttons">
                 <button class="btn btn-approve" onclick="approveRequest()">
@@ -141,7 +166,7 @@
             </div>
         </div>
 
-        <div id="approvalHistory" style="margin-top: 30px;">
+        <div id="approvalHistory" style="margin-top: 30px; display: none;">
             <!-- Approval history will be shown here -->
         </div>
     </div>
@@ -150,6 +175,7 @@
         let currentRequest = null;
         let requestId = null;
         let itemId = null;
+        let formData = null;
 
         // Load request details on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -157,11 +183,40 @@
             const urlParams = new URLSearchParams(window.location.search);
             requestId = urlParams.get('requestId');
             itemId = urlParams.get('itemId');
+            const encodedData = urlParams.get('data');
             
-            if (requestId && itemId) {
+            document.getElementById('loadingMessage').style.display = 'block';
+            
+            if (encodedData) {
+                // Use URL-encoded data (fallback method)
+                try {
+                    formData = JSON.parse(decodeURIComponent(encodedData));
+                    displayRequestDetails(formData);
+                    document.getElementById('loadingMessage').style.display = 'none';
+                } catch (error) {
+                    console.error('Error parsing URL data:', error);
+                    showError('Invalid request data in URL');
+                }
+            } else if (requestId && itemId) {
+                // Try SharePoint first
                 loadRequestDetails();
+            } else if (requestId) {
+                // Try localStorage fallback
+                const localData = localStorage.getItem(`apiRequest_${requestId}`);
+                if (localData) {
+                    try {
+                        formData = JSON.parse(localData);
+                        displayRequestDetails(formData);
+                        document.getElementById('loadingMessage').style.display = 'none';
+                    } catch (error) {
+                        console.error('Error parsing local data:', error);
+                        showError('Invalid request data in local storage');
+                    }
+                } else {
+                    showError('Request not found in local storage');
+                }
             } else {
-                alert('Invalid approval link. Missing request parameters.');
+                showError('Invalid approval link. Missing request parameters.');
             }
         });
 
@@ -172,7 +227,7 @@
                 currentRequest = request;
                 
                 // Parse the stored JSON data
-                const formData = JSON.parse(request.FormDataJSON);
+                formData = JSON.parse(request.FormDataJSON);
                 
                 // Display request details
                 displayRequestDetails(formData, request);
@@ -183,20 +238,37 @@
                     showApprovalHistory(request);
                 }
                 
+                document.getElementById('loadingMessage').style.display = 'none';
+                
             } catch (error) {
-                console.error('Error loading request:', error);
-                alert('Error loading request details. Please try again.');
+                console.error('Error loading request from SharePoint:', error);
+                
+                // Try localStorage fallback
+                const localData = localStorage.getItem(`apiRequest_${requestId}`);
+                if (localData) {
+                    try {
+                        formData = JSON.parse(localData);
+                        displayRequestDetails(formData);
+                        document.getElementById('loadingMessage').style.display = 'none';
+                    } catch (parseError) {
+                        console.error('Error parsing local data:', parseError);
+                        showError('Error loading request details from both SharePoint and local storage');
+                    }
+                } else {
+                    showError('Error loading request details. Please try again.');
+                }
             }
         }
 
-        function displayRequestDetails(formData, request) {
+        function displayRequestDetails(data, request = null) {
             const detailsContainer = document.getElementById('requestDetails');
             
             // Update status indicator
             const statusContainer = document.getElementById('requestStatus');
+            const status = request ? request.Status : 'Pending Approval';
             statusContainer.innerHTML = `
-                <span class="status-indicator status-${request.Status.toLowerCase().replace(' ', '-')}">
-                    ${request.Status}
+                <span class="status-indicator status-${status.toLowerCase().replace(' ', '-')}">
+                    ${status}
                 </span>
             `;
             
@@ -204,42 +276,57 @@
             detailsContainer.innerHTML = `
                 <div class="detail-section">
                     <div class="detail-label">Request Information</div>
-                    <div class="detail-value"><strong>Request ID:</strong> ${request.RequestId}</div>
-                    <div class="detail-value"><strong>API Name:</strong> ${formData.generatedApiName}</div>
-                    <div class="detail-value"><strong>Submission Date:</strong> ${new Date(request.SubmissionDate).toLocaleString()}</div>
-                    <div class="detail-value"><strong>Selected Tier:</strong> ${formData.selectedTier}</div>
-                    <div class="detail-value"><strong>Estimated Cost:</strong> $${formData.estimatedMonthlyCost}/month</div>
+                    <div class="detail-value"><strong>Request ID:</strong> ${data.requestId}</div>
+                    <div class="detail-value"><strong>API Name:</strong> ${data.generatedApiName}</div>
+                    <div class="detail-value"><strong>Submission Date:</strong> ${new Date(data.submissionTimestamp).toLocaleString()}</div>
+                    <div class="detail-value"><strong>Selected Tier:</strong> ${data.selectedTier}</div>
+                    <div class="detail-value"><strong>Estimated Cost:</strong> $${data.estimatedMonthlyCost}/month</div>
                 </div>
                 
                 <div class="detail-section">
                     <div class="detail-label">Requestor Information</div>
-                    <div class="detail-value"><strong>Name:</strong> ${formData.requestorName}</div>
-                    <div class="detail-value"><strong>Email:</strong> ${formData.requestorEmail}</div>
-                    <div class="detail-value"><strong>Department:</strong> ${formData.requestorDepartment}</div>
-                    <div class="detail-value"><strong>Organization:</strong> ${formData.organization}</div>
+                    <div class="detail-value"><strong>Name:</strong> ${data.requestorName}</div>
+                    <div class="detail-value"><strong>Email:</strong> ${data.requestorEmail}</div>
+                    <div class="detail-value"><strong>Department:</strong> ${data.requestorDepartment || 'Not specified'}</div>
+                    <div class="detail-value"><strong>Organization:</strong> ${data.organization}</div>
                 </div>
                 
                 <div class="detail-section">
                     <div class="detail-label">Business Justification</div>
-                    <div class="detail-value">${formData.businessJustification}</div>
+                    <div class="detail-value">${data.businessJustification}</div>
                 </div>
                 
                 <div class="detail-section">
                     <div class="detail-label">Benefits & Expected Impacts</div>
-                    <div class="detail-value">${formData.benefitsImpacts}</div>
+                    <div class="detail-value">${data.benefitsImpacts}</div>
                 </div>
                 
                 <div class="detail-section">
                     <div class="detail-label">Project Timeline</div>
-                    <div class="detail-value"><strong>Start Date:</strong> ${formData.startDate}</div>
-                    <div class="detail-value"><strong>End Date:</strong> ${formData.endDate || 'Ongoing'}</div>
+                    <div class="detail-value"><strong>Start Date:</strong> ${data.startDate || 'Not specified'}</div>
+                    <div class="detail-value"><strong>End Date:</strong> ${data.endDate || 'Ongoing'}</div>
                 </div>
                 
                 <div class="detail-section">
-                    <div class="detail-label">Tier Justification</div>
-                    <div class="detail-value">${formData.tierJustification}</div>
+                    <div class="detail-label">Additional Information</div>
+                    <div class="detail-value"><strong>Business Criticality:</strong> ${data.businessCriticality || 'Not specified'}</div>
+                    <div class="detail-value"><strong>Tier Justification:</strong> ${data.tierJustification || 'Not provided'}</div>
+                    ${data.additionalRequirements ? `<div class="detail-value"><strong>Special Requirements:</strong> ${data.additionalRequirements}</div>` : ''}
                 </div>
             `;
+            
+            detailsContainer.style.display = 'grid';
+            
+            // Show approval section if request is still pending
+            if (!request || request.Status === 'Pending Approval') {
+                document.getElementById('approvalSection').style.display = 'block';
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
         }
 
         async function approveRequest() {
@@ -247,14 +334,17 @@
             
             if (confirm('Are you sure you want to APPROVE this request?')) {
                 try {
-                    await updateRequestStatus('Approved', comments);
+                    if (currentRequest) {
+                        await updateRequestStatus('Approved', comments);
+                    }
                     await sendNotificationEmail('Approved', comments);
                     
                     alert('Request approved successfully! Notification sent to requestor.');
-                    location.reload();
+                    updateUIAfterDecision('Approved', comments);
                 } catch (error) {
                     console.error('Error approving request:', error);
-                    alert('Error approving request. Please try again.');
+                    alert('Request approved locally. Please ensure the requestor is notified manually if email failed.');
+                    updateUIAfterDecision('Approved', comments);
                 }
             }
         }
@@ -269,28 +359,61 @@
             
             if (confirm('Are you sure you want to REJECT this request?')) {
                 try {
-                    await updateRequestStatus('Rejected', comments);
+                    if (currentRequest) {
+                        await updateRequestStatus('Rejected', comments);
+                    }
                     await sendNotificationEmail('Rejected', comments);
                     
                     alert('Request rejected. Notification sent to requestor with comments.');
-                    location.reload();
+                    updateUIAfterDecision('Rejected', comments);
                 } catch (error) {
                     console.error('Error rejecting request:', error);
-                    alert('Error rejecting request. Please try again.');
+                    alert('Request rejected locally. Please ensure the requestor is notified manually if email failed.');
+                    updateUIAfterDecision('Rejected', comments);
                 }
             }
         }
 
+        function updateUIAfterDecision(decision, comments) {
+            // Update status indicator
+            const statusContainer = document.getElementById('requestStatus');
+            statusContainer.innerHTML = `
+                <span class="status-indicator status-${decision.toLowerCase()}">
+                    ${decision}
+                </span>
+            `;
+            
+            // Hide approval section
+            document.getElementById('approvalSection').style.display = 'none';
+            
+            // Show decision history
+            const historyContainer = document.getElementById('approvalHistory');
+            historyContainer.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">Approval Decision</div>
+                    <div class="detail-value"><strong>Status:</strong> ${decision}</div>
+                    <div class="detail-value"><strong>Decision Date:</strong> ${new Date().toLocaleString()}</div>
+                    <div class="detail-value"><strong>Decided By:</strong> Current User</div>
+                    ${comments ? `<div class="detail-value"><strong>Comments:</strong> ${comments}</div>` : ''}
+                </div>
+            `;
+            historyContainer.style.display = 'block';
+        }
+
         async function updateRequestStatus(status, comments) {
+            if (!currentRequest || !itemId) {
+                throw new Error('No SharePoint item to update');
+            }
+            
             const updateData = {
                 Status: status,
                 ApprovalDate: new Date().toISOString(),
                 ApprovalComments: comments,
-                ApprovedBy: getCurrentUser() // You'd implement this to get current user
+                ApprovedBy: getCurrentUser()
             };
             
             // Update SharePoint item
-            const listUrl = `https://yoursite.sharepoint.com/sites/APIManagement/_api/web/lists/getbytitle('API Requests')/items(${itemId})`;
+            const listUrl = `https://usps365.sharepoint.com/sites/APIManagementTeam/_api/web/lists/getbytitle('API Requests')/items(${itemId})`;
             
             await fetch(listUrl, {
                 method: 'PATCH',
@@ -306,7 +429,9 @@
         }
 
         async function sendNotificationEmail(decision, comments) {
-            const formData = JSON.parse(currentRequest.FormDataJSON);
+            if (!formData) {
+                throw new Error('No form data available for notification');
+            }
             
             // Create notification email
             let emailSubject, emailBody;
@@ -316,7 +441,7 @@
                 emailBody = `
 Your API Management request has been APPROVED!
 
-Request ID: ${currentRequest.RequestId}
+Request ID: ${formData.requestId}
 API Name: ${formData.generatedApiName}
 Approval Date: ${new Date().toLocaleString()}
 
@@ -334,7 +459,7 @@ View full request details: ${window.location.href}
                 emailBody = `
 Your API Management request has been REJECTED.
 
-Request ID: ${currentRequest.RequestId}
+Request ID: ${formData.requestId}
 API Name: ${formData.generatedApiName}
 Rejection Date: ${new Date().toLocaleString()}
 
@@ -352,7 +477,7 @@ If you have questions about this rejection, please contact the approver directly
                 `;
             }
             
-            // Send email (this would integrate with your email system)
+            // Send email (opens mailto)
             const mailtoLink = `mailto:${formData.requestorEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
             window.open(mailtoLink);
         }
@@ -366,6 +491,10 @@ If you have questions about this rejection, please contact the approver directly
                     'Accept': 'application/json;odata=verbose'
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`SharePoint request failed: ${response.status}`);
+            }
             
             const result = await response.json();
             return result.d;
@@ -399,6 +528,7 @@ If you have questions about this rejection, please contact the approver directly
                     ${request.ApprovalComments ? `<div class="detail-value"><strong>Comments:</strong> ${request.ApprovalComments}</div>` : ''}
                 </div>
             `;
+            historyContainer.style.display = 'block';
         }
     </script>
 </body>
