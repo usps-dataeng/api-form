@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microsoft Defender for Cloud - Cost Analysis & Recommendations</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #0078d4; padding-bottom: 20px; }
+    .header h1 { color: #0078d4; font-size: 2.2em; margin: 0; }
+    .header h2 { color: #666; font-size: 1.1em; margin: 10px 0 0 0; }
+    .section { margin: 32px 0; padding: 20px; border: 1px solid #e5eaf0; border-radius: 10px; background: #fafafa; }
+    .section h2 { color: #0f6cbd; margin: 0 0 16px 0; border-bottom: 2px solid #0f6cbd; padding-bottom: 8px; }
+    .alert-box { background: #ffebee; border-left: 5px solid #d32f2f; padding: 16px; border-radius: 6px; margin: 16px 0; }
+    .success-box { background: #e8f5e9; border-left: 5px solid #2e7d32; padding: 16px; border-radius: 6px; margin: 16px 0; }
+    .status-unknown { background: #fff8e1; border-left: 5px solid #ffb300; padding: 12px; border-radius: 6px; margin: 12px 0; }
+    .two-column { display: flex; gap: 20px; flex-wrap: wrap; }
+    .column { flex: 1 1 320px; }
+    .chart-container { width: 100%; height: 380px; position: relative; }
+    .cost-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .cost-table th, .cost-table td { border: 1px solid #e1e7ef; padding: 10px; text-align: left; }
+    .cost-table th { background: #0f6cbd; color: #fff; }
+    .metric-card { display: inline-block; background: #fff; padding: 16px; margin: 8px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); min-width: 220px; text-align: center; }
+    .metric-value { font-size: 1.8em; font-weight: 700; color: #0f6cbd; }
+    .metric-label { color: #666; margin-top: 6px; font-size: 0.95em; }
+    .note { font-size: 0.92em; color: #555; }
+    .kbd { background:#eee;border-radius:4px;border:1px solid #ccc;padding:0 4px;font-family:monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Microsoft Defender for Cloud</h1>
+      <h2>Cost Analysis & Recommendations</h2>
+      <p><strong>Subscriptions:</strong> EDL: uspscio-it-edl-4548-00p | IV: uspscio-it-iv-4311-00p</p>
+      <p><strong>Analysis Date:</strong> <span id="currentDate"></span></p>
+    </div>
+
+    <div class="section">
+      <h2>What is Microsoft Defender for Cloud?</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>Plain-English overview</h3>
+          <ul>
+            <li>Security guardrails for your cloud: configuration posture (CSPM) and workload protection (CWPP).</li>
+            <li>Workload plans include Storage, App Service, SQL/Databases, Servers, Containers, etc.</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>How billing works (simple)</h3>
+          <ul>
+            <li>You pay for the plans you turn on.</li>
+            <li>Two models by plan:
+              <ul>
+                <li>Flat/month (e.g., per storage account, per instance/core).</li>
+                <li>Usage-based (legacy Storage: per storage transaction; Malware scanning: per GB scanned).</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="status-unknown"><strong>Source of truth for charges:</strong> Cost Management (by meter). EDL July costs are dominated by Storage classic "Standard Transactions"; IV July costs are App Service/SQL/Key Vault per-node meters.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <strong>Key EDL finding:</strong> July 2025 Security-family charges are almost entirely from the Storage classic meter <em>Microsoft Defender for Cloud Standard Transactions</em> (~$6,202 on uspscioedlprodstorage). Cosmos DB (~$22.99) and minor Key Vault/diag storage are the rest.
+    </div>
+
+    <div class="section">
+      <h2>Executive Summary</h2>
+      <div class="metric-card">
+        <div class="metric-value">$6,244</div>
+        <div class="metric-label">EDL July 2025 Defender (Security)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">$159</div>
+        <div class="metric-label">IV July 2025 Defender (Security)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">$60K–$72K</div>
+        <div class="metric-label">Potential annual savings (EDL Storage)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Historical Cost Trend (EDL)</h2>
+      <div class="chart-container"><canvas id="costTrendChart"></canvas></div>
+      <ul>
+        <li>Consistently high costs; peak $7,151 in March 2025.</li>
+        <li>These are Security-family costs; meter evidence shows Storage classic is the driver.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>July 2025 Detailed Cost Breakdown (EDL)</h2>
+      <div class="chart-container"><canvas id="costBreakdownChart"></canvas></div>
+      <table class="cost-table">
+        <thead>
+          <tr><th>Service/Resource</th><th>Meter</th><th>Cost (USD)</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>uspscioedlprodstorage</td><td>Microsoft Defender for Cloud Standard Transactions</td><td>$6,202.22</td><td>CRITICAL</td></tr>
+          <tr><td>Cosmos DB (dcs-prod-chat-logs)</td><td>Defender for Cloud Standard 100 RU/s</td><td>$22.99</td><td>MEDIUM</td></tr>
+          <tr><td>uspscioedlproddiag</td><td>Defender for Cloud Standard Transactions</td><td>$18.46</td><td>MEDIUM</td></tr>
+          <tr><td>Key Vaults (2)</td><td>Defender per-node</td><td>$0.45</td><td>LOW</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Aug 2025 and Sep 2025 (partial) – Evidence Standard Transactions still ON (EDL)</h2>
+      <p>Cost Management shows the classic Storage <em>Standard Transactions</em> meter continuing to bill in August and into September (partial), confirming the classic plan remains enabled.</p>
+      <div class="two-column">
+        <div class="column">
+          <h3>August 2025 (EDL)</h3>
+          <table class="cost-table">
+            <thead>
+              <tr><th>Meter</th><th>Cost (USD)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Microsoft Defender for Cloud – Standard Transactions</td><td>$7,868.30456544</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Standard 100 RU/s</td><td>$26.604864</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Per node Std Node</td><td>$0.4452096</td></tr>
+              <tr><td>Key Vault – Operations</td><td>$0.003765</td></tr>
+              <tr><td><strong>Total</strong></td><td><strong>$7,895.35840404</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="column">
+          <h3>September 2025 (partial, EDL)</h3>
+          <table class="cost-table">
+            <thead>
+              <tr><th>Meter</th><th>Cost (USD)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Microsoft Defender for Cloud – Standard Transactions</td><td>$2,486.04109424</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Standard 100 RU/s</td><td>$8.222016</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Per node Std Node</td><td>$0.137632</td></tr>
+              <tr><td>Key Vault – Operations</td><td>$0.00042768</td></tr>
+              <tr><td>Key Vault – Operations</td><td>$0.00376464</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Standard Trial Node</td><td>$0</td></tr>
+              <tr><td><strong>Total (partial)</strong></td><td><strong>$2,494.40493456</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="alert-box"><strong>Action:</strong> Switch Storage to the new $10/account plan to eliminate the <em>Standard Transactions</em> meter. Keep Malware Scanning OFF initially or scope narrowly.</div>
+    </div>
+
+    <div class="section">
+      <h2>EDL Transaction Volumes (Jul–Sep) and Run‑Rate Projection</h2>
+      <div class="chart-container"><canvas id="edlTxnChart"></canvas></div>
+      <ul>
+        <li><strong>Jul 2025:</strong> 3.49B transactions (implied ≈ $6.22K on classic pricing @ ~$0.0178/10k)</li>
+        <li><strong>Aug 2025:</strong> 4.46B transactions (implied ≈ $7.94K; actual Standard Transactions ≈ $7,868.30)</li>
+        <li><strong>Sep 2025 (MTD):</strong> 1.32B transactions so far (implied ≈ $2.35K; actual partial ≈ $2,486.04)</li>
+      </ul>
+      <div class="status-unknown">
+        <strong>Run‑rate math (as of Sep 10):</strong> 1.32B over 10 days ≈ 132M/day → projected ≈ 3.96B for a 30‑day month. To exceed Aug's 4.46B, the remaining 20 days must average ≥ ~157M/day (~19% higher than MTD average). If later‑month workloads spike, the month can still surpass August.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>IV Subscription (July 2025) – Security Cost Breakdown</h2>
+      <div class="chart-container"><canvas id="ivBreakdownChart"></canvas></div>
+      <table class="cost-table">
+        <thead>
+          <tr><th>Resource Type</th><th>Cost (USD)</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>microsoft.web/serverfarms</td><td>$144.04</td><td>App Service – Defender Standard Node (instances across plans)</td></tr>
+          <tr><td>microsoft.sql/servers</td><td>$13.18</td><td>SQL – Defender Standard Node (one server)</td></tr>
+          <tr><td>microsoft.keyvault/vaults</td><td>$2.12</td><td>Key Vault – per-node + small operations</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>$159.34</strong></td><td>Storage Defender is Off in IV → no Storage Security charges</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>IV Aug 2025 and Sep 2025 (partial) – Security by Meter</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>August 2025 (IV)</h3>
+          <table class="cost-table">
+            <thead>
+              <tr><th>Meter</th><th>Cost (USD)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Microsoft Defender for Cloud – Standard Node</td><td>$184.272</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Per node Std Node</td><td>$2.0034432</td></tr>
+              <tr><td>Key Vault – Operations</td><td>$0.08657088</td></tr>
+              <tr><td><strong>Total</strong></td><td><strong>$186.36201408</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="column">
+          <h3>September 2025 (partial, IV)</h3>
+          <table class="cost-table">
+            <thead>
+              <tr><th>Meter</th><th>Cost (USD)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Microsoft Defender for Cloud – Standard Node</td><td>$68.2503870967742</td></tr>
+              <tr><td>Microsoft Defender for Cloud – Per node Std Node</td><td>$0.6274224</td></tr>
+              <tr><td>Key Vault – Operations</td><td>$0.0319836</td></tr>
+              <tr><td><strong>Total (partial)</strong></td><td><strong>$68.9097930967742</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="ivTrendChart"></canvas></div>
+      <div class="status-unknown"><strong>Note:</strong> No <em>Standard Transactions</em> meter in IV for these months; increases are driven by App Service Defender (Standard Node) and small Key Vault/per-node charges — consistent with Storage being Off.</div>
+    </div>
+
+    <div class="section">
+      <h2>Classic vs New Defender for Storage – Billing Models</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>Classic (transactions-based)</h3>
+          <ul>
+            <li>Billing: ~$0.0178 per 10,000 storage transactions (implied from July).</li>
+            <li>What counts: LIST/GET/PUT/HEAD and ADLS Gen2 metadata ops.</li>
+            <li>No content malware scanning.</li>
+            <li>Best only for very low-volume accounts.</li>
+          </ul>
+          <div class="alert-box"><strong>EDL July:</strong> 3.49B transactions → ~$6,220 on uspscioedlprodstorage.</div>
+        </div>
+        <div class="column">
+          <h3>New plan (per account + optional scanning)</h3>
+          <ul>
+            <li>Baseline: $10 per protected storage account per month.</li>
+            <li>Optional add‑on: On‑Upload Malware Scanning at $0.15/GB scanned.</li>
+            <li>Transactions do not affect cost under the new plan.</li>
+            <li>Scanning can be enabled per account and scoped to specific containers.</li>
+          </ul>
+          <div class="success-box"><strong>Break‑even (vs July classic cost):</strong> (~$6,220 − $10×N) ÷ $0.15 ≈ ~41 TB uploaded/month total before the new plan with scanning costs more. If scanning is OFF, cost ≈ $10×N.</div>
+        </div>
+      </div>
+      <p class="note"><strong>Rule of thumb:</strong> At the implied unit rate, the classic plan equals $10 at ~5.6M transactions/month. Above that, the new plan is cheaper.</p>
+    </div>
+
+    <div class="section">
+      <h2>Why one subscription shows Standard Transactions and another does not</h2>
+      <ul>
+        <li><strong>Classic vs New plans are separate switches:</strong> The Storage tile you see in Defender ("$10/account + $0.15/GB") controls the <em>new</em> plan. The <em>classic</em> transactions-based plan can still be ON even when that tile shows Off.</li>
+        <li><strong>Enabled per subscription/account:</strong> EDL and UAP enabled classic on specific storage accounts earlier; IV did not. EDG may have it enabled but with tiny volume, so it barely costs anything.</li>
+        <li><strong>Not about “needing storage”:</strong> It's about which Defender plan is enabled and how much transaction volume that account generates.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>When to use each plan</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>Use the new plan ($10/account)</h3>
+          <ul>
+            <li>Monthly volume ≥ ~5.6M transactions (almost all production lakes).</li>
+            <li>You want predictable pricing independent of transaction spikes.</li>
+            <li>You may enable content Malware Scanning selectively for external-ingest containers.</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Consider classic or Off</h3>
+          <ul>
+            <li>Very low-volume accounts (≪ 5.6M tx/month), where classic costs pennies (e.g., EDG).</li>
+            <li>Temporary exceptions where policy mandates classic, or the new plan is not yet available.</li>
+            <li>Otherwise, Off is valid if storage threat detection is not required by policy.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note"><strong>Alternative billing models:</strong> The $10/account plan replaces transactions-based billing for protected accounts. Do not leave both on; set classic to Free, then enable the new plan for selected accounts.</div>
+    </div>
+
+    <div class="section">
+      <h2>Cross-subscription: Standard Transactions Cost (Aug 2025)</h2>
+      <div class="chart-container"><canvas id="stdTxnBySubChart"></canvas></div>
+      <table class="cost-table">
+        <thead>
+          <tr><th>Subscription</th><th>Standard Transactions (USD)</th><th>Comment</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>EDL</td><td>$7,868.30</td><td>High-churn ADLS lake, classic ON</td></tr>
+          <tr><td>UAP</td><td>$1,643.37</td><td>Moderate volume, classic ON</td></tr>
+          <tr><td>IV</td><td>$0</td><td>Storage Defender Off (no Standard Transactions)</td></tr>
+          <tr><td>EDG</td><td>$0.86</td><td>Classic appears ON but tiny volume; not a driver</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Subscription Comparison (July 2025 – Security)</h2>
+      <div class="chart-container"><canvas id="subsCompareChart"></canvas></div>
+      <ul>
+        <li><strong>EDL:</strong> Driven by Storage classic transactions on the primary ADLS account.</li>
+        <li><strong>IV:</strong> Storage protection OFF; charges are App Service/SQL/Key Vault per-node meters only.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>IV – Defender Plan Status Snapshot</h2>
+      <table class="cost-table">
+        <thead>
+          <tr><th>Plan</th><th>Status</th><th>Quantity/Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Foundational CSPM</td><td>On (Free)</td><td>Baseline posture checks</td></tr>
+          <tr><td>Defender CSPM</td><td>Off</td><td>$5/resource/month if enabled (136 resources shown)</td></tr>
+          <tr><td>Storage</td><td>Off</td><td>25 storage accounts eligible (new plan off; check classic plan separately)</td></tr>
+          <tr><td>App Service</td><td>On</td><td>$15/instance/month; 16 instances</td></tr>
+          <tr><td>Databases</td><td>Off</td><td>3 instances eligible (selected: 0/4)</td></tr>
+          <tr><td>Key Vault</td><td>On</td><td>9 key vaults; $0.02/10k ops</td></tr>
+          <tr><td>Containers</td><td>Off/Partial</td><td>0 registries; 0 k8s cores</td></tr>
+          <tr><td>Servers (Plan 2)</td><td>Off</td><td>110 servers listed; plan disabled</td></tr>
+          <tr><td>Resource Manager</td><td>Off</td><td>$5/sub/month if enabled</td></tr>
+          <tr><td>AI Services</td><td>Off</td><td>$0.0008/1K tokens</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>How Standard Transactions Become Cost (EDL)</h2>
+      <p>July 2025 storage transactions: <strong>3.49B</strong></p>
+      <div class="two-column">
+        <div class="column">
+          <h3>Calculation (implied)</h3>
+          <pre>Blocks = 3.49B ÷ 10,000 = 349,000
+Cost ≈ Blocks × UnitPricePer10k
+$6,220.68 ≈ 349,000 × $0.0178
+≈ $1.78 per million transactions</pre>
+          <ul>
+            <li>This explains the ~$6.2K bill for July’s Storage classic meter.</li>
+            <li>Exact unit price/usage is in Cost Management export (UnitPrice & UsageQuantity).</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>What inflates transactions</h3>
+          <ul>
+            <li>ADLS Gen2 directory/ACL & metadata operations.</li>
+            <li>ETL/Spark writing many small files (many commits/flushes).</li>
+            <li>Frequent LIST/HEAD/GET and high-frequency polling.</li>
+            <li>Recursive enumeration across large trees.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="success-box"><strong>Takeaway:</strong> Classic bills per 10,000 analyzed operations. Switching to the flat $10/account plan or reducing noisy operations directly cuts cost.</div>
+    </div>
+
+    <div class="section">
+      <h2>DEV Environment - Defender Storage Costs</h2>
+      <p>uspscioedlstoragedev (Security meter: Microsoft Defender for Cloud Standard Transactions)</p>
+      <div class="chart-container"><canvas id="devCostChart"></canvas></div>
+      <p><strong>Summary:</strong> Same meter as production, but much lower operation volume (~$32–$68/month).</p>
+    </div>
+
+    <div class="section">
+      <h2>Cost Optimization Opportunities</h2>
+      <div class="chart-container"><canvas id="savingsChart"></canvas></div>
+      <div class="status-unknown"><strong>Verification:</strong> After changes, the <em>Standard Transactions</em> meter should disappear (plan switch) or trend down (workload tuning). Check Cost Management by meter.</div>
+    </div>
+
+    <div class="section">
+      <h2>Recommendations by Priority</h2>
+      <h3>Immediate (High Impact)</h3>
+      <ul>
+        <li><strong>Switch EDL Storage plan:</strong> Move from classic per-transaction to <strong>$10/storage account/month</strong>. Ensure <strong>on-upload malware scanning is OFF</strong> unless required.</li>
+        <li><strong>Scope coverage:</strong> Protect only required storage accounts; exclude diagnostic/temp if policy allows. If enabling scanning, limit to external-ingest containers.</li>
+        <li><strong>Quick workload fixes (EDL lake):</strong> Larger files, compaction (OPTIMIZE), reduce recursive listings, lower polling.</li>
+      </ul>
+      <h3>Medium</h3>
+      <ul>
+        <li>Deeper workload tuning to reduce metadata/ACL churn and small-file patterns.</li>
+        <li>For IV, keep Storage Off unless mandated; maintain App Service/Key Vault coverage.</li>
+      </ul>
+      <h3>Ongoing</h3>
+      <ul>
+        <li>Budgets/anomaly alerts on Service family = Security; monthly review by meter/resource.</li>
+        <li>Document plan versions and coverage for compliance; avoid double billing during transitions.</li>
+      </ul>
+    </div>
+
+    <div class="success-box">
+      <h3>Expected Savings (Storage)</h3>
+      <div class="two-column">
+        <div class="column">
+          <strong>Plan switch</strong>
+          <ul>
+            <li>~$6,200 → ~$10/account/month (given current usage)</li>
+            <li>Annual impact ≈ $72,000</li>
+          </ul>
+        </div>
+        <div class="column">
+          <strong>Workload tuning</strong>
+          <ul>
+            <li>~20–50% of current storage meter (~$1,200–$3,100/month)</li>
+            <li>Annual impact ~$14,000–$37,000</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Proving plan state (Portal + CLI)</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>Portal evidence</h3>
+          <ol>
+            <li><strong>Cost Analysis:</strong> Cost Management → Scope = subscription → Filter: Service family = Security → Group by: Meter name. If you see <em>Microsoft Defender for Cloud – Standard Transactions</em>, classic is (or was) ON.</li>
+            <li><strong>Defender Inventory:</strong> Microsoft Defender for Cloud → Inventory → filter Resource type = Storage accounts → add coverage/plan version columns, capture covered accounts.</li>
+            <li><strong>Environment settings:</strong> Microsoft Defender for Cloud → Environment settings → subscription → Storage tile shows new plan (v2) state (On/Off). Some tenants expose a <em>Classic</em> link; if present, screenshot it.</li>
+          </ol>
+        </div>
+        <div class="column">
+          <h3>CLI (definitive)</h3>
+          <pre>az account set --subscription &lt;SUB_ID&gt;
+az security pricing show -n StorageAccounts
+# Interpret:
+#  - pricingTier: Free          → Off
+#  - pricingTier: Standard      → On (classic) if subPlan is absent/not V2
+#  - pricingTier: Standard, subPlan: DefenderForStorageV2 → New plan (v2) On</pre>
+          <div class="status-unknown small">If policy forces classic ON, check Azure Policy assignments for Microsoft.Security/pricings and exclude the subscription or change the assignment.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Plan Switch Steps (Portal)</h2>
+      <ol>
+        <li>Defender for Cloud → Environment settings → <span class="kbd">uspscio-it-edl-4548-00p</span>.</li>
+        <li>Storage: Turn <strong>OFF</strong> classic transactions-based plan (via CLI/REST if not visible in UI).</li>
+        <li>Enable the <strong>new Storage plan</strong> → select only required storage accounts.</li>
+        <li>Set <strong>Malware Scanning = OFF</strong> initially; later enable only on external-ingest containers if needed.</li>
+        <li>Verify next day in Cost Management:
+          <ul>
+            <li>Security family → By Meter: "Standard Transactions" = $0.</li>
+            <li>See small per-account charge; if scanning enabled, see "On-Upload Malware Scanning – Data Scanned (GB)".</li>
+          </ul>
+        </li>
+      </ol>
+      <p class="note">Avoid double billing: do not leave classic Storage plan ON while enabling the new plan.</p>
+    </div>
+
+    <div class="section">
+      <h2>Next Steps</h2>
+      <ol>
+        <li>Cost Management → Confirm Storage classic meter is sole EDL driver for target months.</li>
+        <li>Change request → Switch EDL to the new $10/account plan; scanning OFF initially.</li>
+        <li>Workload changes → Reduce small files and repeated listings/polls.</li>
+        <li>Verify → Meter change/removal and daily trend reductions.</li>
+        <li>IV → Keep Storage Off unless mandated; maintain App Service/Key Vault coverage; turn Containers Off if unused.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+
+    // Historical Cost Trend (EDL)
+    const trendCtx = document.getElementById('costTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jul 2024', 'Aug 2024', 'Sep 2024', 'Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025', 'Jul 2025', 'Aug 2025', 'Sep 2025 (partial)'],
+        datasets: [{
+          label: 'Microsoft Defender Costs (EDL)',
+          data: [4262.18, 4734.87, 4299.85, 4861.65, 5157.83, 5227.67, 6175.24, 6596.24, 7151.02, 5188.89, 5733.33, 5542.87, 6244.23, 7895.35840404, 2494.40493456],
+          borderColor: '#d32f2f',
+          backgroundColor: 'rgba(211,47,47,0.10)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.35
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'EDL Defender Monthly Costs (Jul 2024 – Sep 2025 partial)' } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+
+    // July 2025 Breakdown (EDL)
+    const breakdownCtx = document.getElementById('costBreakdownChart').getContext('2d');
+    new Chart(breakdownCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Storage Account (Main)', 'Cosmos DB', 'Diagnostic Storage', 'Key Vaults'],
+        datasets: [{
+          data: [6202.22, 22.99, 18.46, 0.45],
+          backgroundColor: ['#f44336', '#ff9800', '#ffc107', '#4caf50'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'EDL July 2025 Defender Cost Breakdown ($6,244 Total)' }, legend: { position: 'bottom' } }
+      }
+    });
+
+    // EDL Storage Transactions (Billions)
+    const edlTxnCtx = document.getElementById('edlTxnChart').getContext('2d');
+    new Chart(edlTxnCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Jul 2025', 'Aug 2025', 'Sep 2025 (MTD)'],
+        datasets: [{
+          label: 'Storage Transactions (Billions)',
+          data: [3.49, 4.46, 1.32],
+          backgroundColor: ['#f44336', '#e57373', '#ffccbc'],
+          borderColor: ['#c62828', '#d32f2f', '#ff8a65'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'EDL Storage Transactions (Billions)' }, legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // IV July 2025 Breakdown
+    const ivBreakdownCtx = document.getElementById('ivBreakdownChart').getContext('2d');
+    new Chart(ivBreakdownCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['App Service (serverfarms)', 'SQL (servers)', 'Key Vault'],
+        datasets: [{
+          data: [144.0384, 13.1822580645161, 2.11782384],
+          backgroundColor: ['#1976d2', '#64b5f6', '#90caf9'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'IV July 2025 – Security Cost Breakdown ($159.34)' }, legend: { position: 'bottom' } }
+      }
+    });
+
+    // IV Aug & Sep 2025 (partial) Trend
+    const ivTrendCtx = document.getElementById('ivTrendChart').getContext('2d');
+    new Chart(ivTrendCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Aug 2025', 'Sep 2025 (partial)'],
+        datasets: [{
+          label: 'IV Security Cost (USD)',
+          data: [186.36201408, 68.9097930967742],
+          backgroundColor: ['#1976d2', '#90caf9'],
+          borderColor: ['#1565c0', '#64b5f6'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'IV – Security Costs (Aug & Sep 2025 partial)' }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+
+    // Subscription comparison (EDL vs IV Security July 2025)
+    const subsCompareCtx = document.getElementById('subsCompareChart').getContext('2d');
+    new Chart(subsCompareCtx, {
+      type: 'bar',
+      data: {
+        labels: ['EDL', 'IV'],
+        datasets: [{
+          label: 'Security Cost (USD)',
+          data: [6244.23, 159.3385],
+          backgroundColor: ['#e53935', '#1e88e5'],
+          borderColor: ['#b71c1c', '#1565c0'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'July 2025 – Security Costs by Subscription' }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+
+    // Standard Transactions cost by subscription (Aug 2025)
+    const stdTxnBySubCtx = document.getElementById('stdTxnBySubChart').getContext('2d');
+    new Chart(stdTxnBySubCtx, {
+      type: 'bar',
+      data: {
+        labels: ['EDL', 'UAP', 'IV', 'EDG'],
+        datasets: [{
+          label: 'Standard Transactions (USD)',
+          data: [7868.30456544, 1643.37, 0, 0.86],
+          backgroundColor: ['#ef5350', '#42a5f5', '#90caf9', '#66bb6a'],
+          borderColor: ['#c62828', '#1e88e5', '#64b5f6', '#2e7d32'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Standard Transactions (Security) – Aug 2025' }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+
+    // DEV Environment Costs
+    const devCtx = document.getElementById('devCostChart').getContext('2d');
+    new Chart(devCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Jul 2024','Aug 2024','Sep 2024','Oct 2024','Nov 2024','Dec 2024','Jan 2025','Feb 2025','Mar 2025','Apr 2025','May 2025','Jun 2025'],
+        datasets: [{
+          label: 'Dev - Standard Transactions (USD)',
+          data: [40.64016704,41.76197872,37.41624304,51.42892832,67.74974448,59.67891952,57.81039264,43.3300736,48.3724824,42.87313184,36.2977912,32.5946544],
+          backgroundColor: '#90caf9',
+          borderColor: '#42a5f5',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Dev Storage (uspscioedlstoragedev) - Defender Standard Transactions' }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+
+    // Storage Savings Potential
+    const savingsCtx = document.getElementById('savingsChart').getContext('2d');
+    new Chart(savingsCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Storage plan switch', 'Workload tuning'],
+        datasets: [{
+          label: 'Potential Monthly Savings (Storage)',
+          data: [6200, 2000],
+          backgroundColor: ['#4caf50', '#8bc34a'],
+          borderColor: ['#388e3c', '#689f38'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Potential Monthly Savings (Storage)' } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v.toLocaleString() } } }
+      }
+    });
+  </script>
+</body>
+</html>
